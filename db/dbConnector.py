@@ -76,19 +76,69 @@ class ConnectionDB:
                     "WHERE `correo_electronico` = %s;"
             variables = (nuevo_nombre, nueva_contrasennia, nuevo_tipo, correo_electronico)
             self.executeSQL(query, variables)
-
-    #OFERTA
-
-    def add_product(self, nombre: str, valorReal: str, descripcion: str, categoria: str):
-        query = "INSERT INTO `mydb`.`articulo` (`nombre`,`valorReal`,`descripcion`,`categoria`) " \
-                "VALUES (%s,%s,%s,%s);"
-        variables = (nombre, int(valorReal), descripcion, categoria)
-        self.executeSQL(query, variables)
-
     def user_with_this_email_exist(self, correo):
         query = "SELECT * FROM USUARIO u WHERE u.correo_electronico = %s;"
         user = self.executeSQL(query, (correo,))
         if len(user) > 0:
+            return True
+        else:
+            return False
+
+
+    #PRODUCTO
+    def get_product_by_id(self, idproducto : int):
+        query = "SELECT * FROM PRODUCTO p WHERE p.idproducto = %s;"
+        product = self.executeSQL(query, (idproducto,))
+        if len(product) > 0:
+            return product[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
+    def add_product(self, imagen: str, nombre: str, descripcion: str, categoria: str):
+        query = "INSERT INTO `mydb`.`PRODUCTO` (`imagen`,`nombre`,`descripcion`,`categoria`) " \
+                "VALUES (%s,%s,%s,%s);"
+        variables = (imagen, nombre, descripcion, categoria)
+        self.executeSQL(query, variables)
+
+    def get_product_by_image(self, image :str):
+        query = "SELECT * FROM PRODUCTO p WHERE p.imagen = %s;"
+        product = self.executeSQL(query, (image,))
+        if len(product) > 0:
+            return product[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this image was not found")
+    def delete_product(self, idproducto: int):
+        if not self.product_with_this_id_exist(idproducto):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Product with this id does not exist")
+        else:
+            query = "DELETE FROM `mydb`.`PRODUCTO` WHERE `idproducto` = %s;"
+            variables = (idproducto,)
+            self.executeSQL(query, variables)
+
+    def update_product(self, idproducto: int, nuevo_nombre: str, nueva_descripcion: str, nueva_categoria: str):
+        if not self.product_with_this_id_exist(idproducto):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Product with this id does not exist")
+        else:
+            query = "UPDATE `mydb`.`PRODUCTO` SET  `nombre` = %s, `descripcion` = %s, `categoria` = %s " \
+                    "WHERE `idproducto` = %s;"
+            variables = (nuevo_nombre, nueva_descripcion, nueva_categoria, idproducto,)
+            self.executeSQL(query,variables)
+
+    def update_product_image(self, idproducto: int, imagen: str):
+        if not self.product_with_this_id_exist(idproducto):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Product with this id does not exist")
+        else:
+            query = "UPDATE `mydb`.`PRODUCTO` SET  `imagen` = %s " \
+                    "WHERE `idproducto` = %s;"
+            variables = (imagen, idproducto,)
+            self.executeSQL(query,variables)
+
+    def product_with_this_id_exist(self, idproducto):
+        query = "SELECT * FROM PRODUCTO p WHERE p.idproducto = %s;"
+        product = self.executeSQL(query, (idproducto,))
+        if len(product) > 0:
             return True
         else:
             return False
