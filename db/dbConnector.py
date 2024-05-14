@@ -85,7 +85,7 @@ class ConnectionDB:
             return False
 
 
-    #PRODUCTO
+    # PRODUCTO
     def get_product_by_id(self, idproducto : int):
         query = "SELECT * FROM PRODUCTO p WHERE p.idproducto = %s;"
         product = self.executeSQL(query, (idproducto,))
@@ -142,3 +142,93 @@ class ConnectionDB:
             return True
         else:
             return False
+
+
+    #OFERTA
+
+    def get_oferta_by_id(self, idoferta : int):
+        query = "SELECT * FROM OFERTA o WHERE o.idoferta = %s;"
+        oferta = self.executeSQL(query, (idoferta,))
+        if len(oferta) > 0:
+            return oferta[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Oferta with this id was not found")
+
+    #TODO CREATE OFFER
+    def add_offer(self):
+        pass
+
+    #TODO DELETE OFFER
+    def delete_offer(self):
+        pass
+
+    #TODO UPDATE OFFER
+    def update_offer(self):
+        pass
+
+    #BUY
+    def get_buy_by_id(self, idcompra : int):
+        query = "SELECT * FROM COMPRA c WHERE c.idcompra = %s;"
+        buy = self.executeSQL(query, (idcompra,))
+        if len(buy) > 0:
+            return buy[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
+
+    #TODO CREATE BUY
+    def add_buy(self):
+        pass
+
+    #TODO DELETE BUY
+    def delete_buy(self):
+        pass
+
+    #TODO UPDATE BUY
+
+    def update_buy(self):
+        pass
+
+    #SELL
+    def get_sell_by_id(self, idventa : int):
+        query = "SELECT * FROM VENTA v WHERE v.idventa = %s;"
+        sell = self.executeSQL(query, (idventa,))
+        if len(sell) > 0:
+            return sell[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sell with this id was not found")
+
+    #TODO CREATE SELL
+    def add_sell(self):
+        pass
+    #TODO DELETE SELL
+    def delete_sell(self):
+        pass
+
+    #TODO UPDATE SELL
+    def update_sell(self):
+        pass
+
+    #PAWN
+    def get_pawn_by_id(self, idempennio : int):
+        query = "SELECT * FROM PRESTAMO p WHERE p.idprestamo = %s;"
+        pawn = self.executeSQL(query, (idempennio,))
+        if len(pawn) > 0:
+            return pawn[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawn with this id was not found")
+
+    #TODO CREATE PAWN
+    def add_pawn(self):
+        pass
+
+    #TODO DELETE PAWN
+    def delete_pawn(self):
+        pass
+
+    #TODO UPDATE PAWN
+    def update_pawn(self):
+        pass
+
+
+
+
