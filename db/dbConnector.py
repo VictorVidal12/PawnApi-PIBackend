@@ -76,6 +76,7 @@ class ConnectionDB:
                     "WHERE `correo_electronico` = %s;"
             variables = (nuevo_nombre, nueva_contrasennia, nuevo_tipo, correo_electronico)
             self.executeSQL(query, variables)
+
     def user_with_this_email_exist(self, correo):
         query = "SELECT * FROM USUARIO u WHERE u.correo_electronico = %s;"
         user = self.executeSQL(query, (correo,))
@@ -84,28 +85,29 @@ class ConnectionDB:
         else:
             return False
 
-
     # PRODUCTO
-    def get_product_by_id(self, idproducto : int):
+    def get_product_by_id(self, idproducto: int):
         query = "SELECT * FROM PRODUCTO p WHERE p.idproducto = %s;"
         product = self.executeSQL(query, (idproducto,))
         if len(product) > 0:
             return product[0]
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
+
     def add_product(self, imagen: str, nombre: str, descripcion: str, categoria: str):
         query = "INSERT INTO `mydb`.`PRODUCTO` (`imagen`,`nombre`,`descripcion`,`categoria`) " \
                 "VALUES (%s,%s,%s,%s);"
         variables = (imagen, nombre, descripcion, categoria)
         self.executeSQL(query, variables)
 
-    def get_product_by_image(self, image :str):
+    def get_product_by_image(self, image: str):
         query = "SELECT * FROM PRODUCTO p WHERE p.imagen = %s;"
         product = self.executeSQL(query, (image,))
         if len(product) > 0:
             return product[0]
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this image was not found")
+
     def delete_product(self, idproducto: int):
         if not self.product_with_this_id_exist(idproducto):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -123,7 +125,7 @@ class ConnectionDB:
             query = "UPDATE `mydb`.`PRODUCTO` SET  `nombre` = %s, `descripcion` = %s, `categoria` = %s " \
                     "WHERE `idproducto` = %s;"
             variables = (nuevo_nombre, nueva_descripcion, nueva_categoria, idproducto,)
-            self.executeSQL(query,variables)
+            self.executeSQL(query, variables)
 
     def update_product_image(self, idproducto: int, imagen: str):
         if not self.product_with_this_id_exist(idproducto):
@@ -133,7 +135,7 @@ class ConnectionDB:
             query = "UPDATE `mydb`.`PRODUCTO` SET  `imagen` = %s " \
                     "WHERE `idproducto` = %s;"
             variables = (imagen, idproducto,)
-            self.executeSQL(query,variables)
+            self.executeSQL(query, variables)
 
     def product_with_this_id_exist(self, idproducto):
         query = "SELECT * FROM PRODUCTO p WHERE p.idproducto = %s;"
@@ -143,10 +145,9 @@ class ConnectionDB:
         else:
             return False
 
-
     #OFERTA
 
-    def get_oferta_by_id(self, idoferta : int):
+    def get_oferta_by_id(self, idoferta: int):
         query = "SELECT * FROM OFERTA o WHERE o.idoferta = %s;"
         oferta = self.executeSQL(query, (idoferta,))
         if len(oferta) > 0:
@@ -167,7 +168,7 @@ class ConnectionDB:
         pass
 
     #BUY
-    def get_buy_by_id(self, idcompra : int):
+    def get_buy_by_id(self, idcompra: int):
         query = "SELECT * FROM COMPRA c WHERE c.idcompra = %s;"
         buy = self.executeSQL(query, (idcompra,))
         if len(buy) > 0:
@@ -175,21 +176,66 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
 
-    #TODO CREATE BUY
-    def add_buy(self):
-        pass
+    def add_buy(self, precio: int, fecha: str, medio_pago: str, usuario_idusuario: int, producto_idproducto: int):
+        query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`medio_pago`,`usuario_idusuario`,`producto_idproducto`) " \
+                "VALUES (%s,%s,%s,%s,%s);"
+        variables = (precio, fecha, medio_pago, usuario_idusuario, producto_idproducto)
+        self.executeSQL(query, variables)
 
-    #TODO DELETE BUY
-    def delete_buy(self):
-        pass
+    def buy_with_this_id_exist(self, idcompra: int):
+        query = "SELECT * FROM COMPRA c WHERE c.idcompra = %s;"
+        buy = self.executeSQL(query, (idcompra,))
+        if len(buy) > 0:
+            return True
+        else:
+            return False
 
-    #TODO UPDATE BUY
+    def delete_buy(self, idcompra: int):
+        if not self.buy_with_this_id_exist(idcompra):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Buy with this id does not exist")
+        else:
+            query = "DELETE FROM `mydb`.`COMPRA` WHERE `idcompra` = %s;"
+            variables = (idcompra,)
+            self.executeSQL(query, variables)
 
-    def update_buy(self):
-        pass
+    def buy_with_this_user_id_exists(self, idusuario: int):
+        query = "SELECT * FROM COMPRA c WHERE c.usuario_idusuario = %s;"
+        buy = self.executeSQL(query, (idusuario,))
+        if len(buy) > 0:
+            return True
+        else:
+            return False
+
+    def update_buy(self, idcompra: int, n_precio: int, n_fecha: str, n_medio_pago: str, n_usuario_idusuario: int,
+                   n_producto_idproducto: int):
+        if not self.buy_with_this_id_exist(idcompra):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Buy with this id does not exist")
+        else:
+            query = "UPDATE `mydb`.`COMPRA` SET  `n_precio` = %s, `n_fecha` = %s, `n_medio_pago` = %s, `n_usuario_idusuario` = %s, `n_producto_idproducto` = %s " \
+                    "WHERE `idcompra` = %s;"
+            variables = (n_precio, n_fecha, n_medio_pago, n_usuario_idusuario, n_producto_idproducto,)
+            self.executeSQL(query, variables)
+
+    def get_buy_by_user_email(self, correo: str):
+        user = self.get_user_by_email(correo)
+        idusuario = user[0]
+        if not self.buy_with_this_user_id_exists(idusuario):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this email was not found")
+        else:
+            query = "SELECT * FROM COMPRA c WHERE c.usuario_idusuario = %s;"
+            variables = (idusuario,)
+            buys = self.executeSQL(query, variables)
+            return buys
+
+    def get_buy(self):
+        query = "SELECT * FROM COMPRA;"
+        buys = self.executeSQL(query)
+        return buys
 
     #SELL
-    def get_sell_by_id(self, idventa : int):
+    def get_sell_by_id(self, idventa: int):
         query = "SELECT * FROM VENTA v WHERE v.idventa = %s;"
         sell = self.executeSQL(query, (idventa,))
         if len(sell) > 0:
@@ -200,6 +246,7 @@ class ConnectionDB:
     #TODO CREATE SELL
     def add_sell(self):
         pass
+
     #TODO DELETE SELL
     def delete_sell(self):
         pass
@@ -209,7 +256,7 @@ class ConnectionDB:
         pass
 
     #PAWN
-    def get_pawn_by_id(self, idempennio : int):
+    def get_pawn_by_id(self, idempennio: int):
         query = "SELECT * FROM PRESTAMO p WHERE p.idprestamo = %s;"
         pawn = self.executeSQL(query, (idempennio,))
         if len(pawn) > 0:
@@ -228,7 +275,3 @@ class ConnectionDB:
     #TODO UPDATE PAWN
     def update_pawn(self):
         pass
-
-
-
-
