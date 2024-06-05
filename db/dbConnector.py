@@ -1,17 +1,17 @@
 from fastapi import HTTPException, status
 import mysql.connector
-from mysql.connector import pooling, Error
+from mysql.connector import pooling
 
 
 class ConnectionDB:
 
     def __init__(self):
         dbconfig = {'user': 'myadmin',
-                    'host': 'serverflexibletest.mysql.database.azure.com',
-                    'password': 'HolaMundo*',
-                    'database': 'mydb',
-                    'port': 3306,  # Puerto predeterminado de MySQL
-                    'raise_on_warnings': True}
+          'host': 'serverflexibletest.mysql.database.azure.com',
+          'password': 'HolaMundo*',
+          'database': 'mydb',
+          'port': 3306,  # Puerto predeterminado de MySQL
+          'raise_on_warnings': True}  # Para que se generen excepciones en caso de advertencias
         self.conn = None  # Mantén la conexión abierta en la instancia
         self.pool = pooling.MySQLConnectionPool(pool_name="mypool",
                                                 pool_size=5,
@@ -19,7 +19,7 @@ class ConnectionDB:
 
     def executeSQL(self, consulta_sql, variables_adicionales=None):
         connection = self.pool.get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor(dictionary = True)
         try:
             # Agregar la propiedad y obtener el id de la propiedad recién agregada
             cursor.execute(consulta_sql, variables_adicionales)
@@ -38,6 +38,7 @@ class ConnectionDB:
         finally:
             cursor.close()
             connection.close()
+
 
     def get_users(self):
         query = "SELECT * FROM USUARIO"
@@ -157,7 +158,7 @@ class ConnectionDB:
         if len(oferta) > 0:
             return oferta[0]
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Oferta with this id was not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer with this id was not found")
 
     #TODO CREATE OFFER
     def add_offer(self):
@@ -239,14 +240,6 @@ class ConnectionDB:
         return buys
 
     #SELL
-    def get_sells(self):
-        query = "SELECT * FROM VENTA;"
-        sell = self.executeSQL(query, ())
-        if len(sell) > 0:
-            return sell[0]
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sells was not found")
-
     def get_sell_by_id(self, idventa: int):
         query = "SELECT * FROM VENTA v WHERE v.idventa = %s;"
         sell = self.executeSQL(query, (idventa,))

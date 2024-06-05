@@ -8,6 +8,6 @@ class User (BaseModel):
     contrasennia: str
     tipo: str
     genero: str
-    nacimiento: str
-    telefono: str
+    nacimiento : str
+    telefono : str
 
