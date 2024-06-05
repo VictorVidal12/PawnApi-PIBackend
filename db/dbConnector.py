@@ -170,6 +170,7 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer with this id was not found")
 
+#PRINT ADAD
     #TODO CREATE OFFER
     def add_offer(self):
         pass
