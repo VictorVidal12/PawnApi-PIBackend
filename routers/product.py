@@ -33,11 +33,10 @@ async def product(nombre, descripcion, categoria, image: UploadFile = File(...))
     return JSONResponse(content=product, status_code=status.HTTP_201_CREATED)
 
 @productRouter.put("/", status_code= status.HTTP_200_OK, response_model = Product)
-async def product_strings(product: Product):
-    product.categoria = check_category(product.categoria)
-    dict_product =  dict(product)
-    dbConnect.update_product(dict_product["idproducto"], dict_product["nombre"], dict_product["descripcion"], dict_product["categoria"])
-    product_dict = dbConnect.get_product_by_id(dict_product["idproducto"])
+async def product_strings(id :int,nombre :str, descripcion :str, categoria :str):
+    categoria = check_category(categoria)
+    dbConnect.update_product(id, nombre, descripcion, categoria)
+    product_dict = dbConnect.get_product_by_id(id)
     return JSONResponse(content=product_dict, status_code=status.HTTP_200_OK)
 
 @productRouter.put("/{id}", status_code= status.HTTP_200_OK, response_model = Product)
@@ -50,12 +49,7 @@ async def img_product(id :str ,image: UploadFile):
     product = dbConnect.get_product_by_id(int(id))
     return JSONResponse(content=product, status_code=status.HTTP_200_OK)
 
-@productRouter.delete("/{id}", status_code= status.HTTP_200_OK)
-async def product(idproducto : str):
-    product = dbConnect.get_product_by_id(int(idproducto))
-    dbConnect.delete_product(product["idproducto"])
-    delete_image(absolute_imagedir+product["imagen"])
-    return JSONResponse(content={"message": "Product deleted"}, status_code=status.HTTP_200_OK)
+
 def delete_image(image_path: str):
     if os.path.exists(image_path):
         os.remove(image_path)
@@ -68,7 +62,7 @@ def delete_image(image_path: str):
 
 
 def check_category(categoria: str):
-    categorias = ["electrónica", ",moda", "hogar","salud","entretenimiento","deportes", "transporte", "mascotas","arte", "literatura"]
+    categorias = ["electrónica", "moda", "hogar","salud","entretenimiento","deportes", "transporte", "mascotas","arte", "literatura"]
     if categoria.lower() in categorias:
         return categoria.lower().capitalize()
     else:
