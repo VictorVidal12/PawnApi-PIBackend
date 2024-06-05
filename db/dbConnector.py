@@ -82,14 +82,16 @@ class ConnectionDB:
             variables = (correo_electronico,)
             self.executeSQL(query, variables)
 
-    def update_user(self, correo_electronico: str, nuevo_nombre: str, nueva_contrasennia: str, nuevo_tipo: str):
+    def update_user(self, correo_electronico: str, nuevo_nombre: str, nueva_contrasennia: str, nuevo_tipo: str,
+                    nuevo_genero: str, nuevo_nacimiento: str, nuevo_telefono: str):
         if not self.user_with_this_email_exist(correo_electronico):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="User with this email does not exist")
         else:
-            query = "UPDATE `mydb`.`USUARIO` SET `nombre` = %s, `contrasennia` = %s, `tipo` = %s " \
-                    "WHERE `correo_electronico` = %s;"
-            variables = (nuevo_nombre, nueva_contrasennia, nuevo_tipo, correo_electronico)
+            query = "UPDATE `mydb`.`USUARIO` SET `nombre` = %s, `contrasennia` = %s, `tipo` = %s, `genero` = %s, " \
+                    "`nacimiento` = %s, `telefono` = %s WHERE `correo_electronico` = %s;"
+            variables = (nuevo_genero, nuevo_nacimiento, nuevo_telefono, nuevo_nombre, nueva_contrasennia, nuevo_tipo,
+                         correo_electronico)
             self.executeSQL(query, variables)
 
     def user_with_this_email_exist(self, correo):
