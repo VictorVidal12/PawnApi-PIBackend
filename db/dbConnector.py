@@ -170,6 +170,7 @@ class ConnectionDB:
 
     #OFERTA
     # El cliente crea la oferta
+    # HU: Crear oferta de venta(cliente)
     def add_offer_type_pawn_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
@@ -181,7 +182,10 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
+
+
     # El cliente crea la oferta
+    # HU: Crear oferta de empeño (cliente)
     def add_offer_type_sell_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
