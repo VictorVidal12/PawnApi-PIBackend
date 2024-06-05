@@ -1,5 +1,4 @@
 from fastapi import HTTPException, status
-import mysql.connector
 from mysql.connector import pooling
 
 
@@ -42,12 +41,13 @@ class ConnectionDB:
     #FALTA PROBARLO
     def get_pending_pawn_offerts_by_userid(self, idusuario: int):
         query = "SELECT o.* FROM oferta o INNER JOIN producto p ON p.idproducto = o.producto_idproducto INNER JOIN empennio e ON e.producto_idproducto = o.producto_idproducto WHERE  o.estado = 'Pendiente Tienda' AND o.usuario_idusuario = %s;"
-        variables = (idusuario, )
+        variables = (idusuario,)
         list_offerts = self.executeSQL(query, variables)
         if len(list_offerts) > 0:
             return list_offerts
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This user does not have pending pawn offerts.")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="This user does not have pending pawn offerts.")
 
     def get_users(self):
         query = "SELECT * FROM USUARIO"
@@ -165,24 +165,79 @@ class ConnectionDB:
     #OFERTA
 
     def get_oferta_by_id(self, idoferta: int):
-        query = "SELECT * FROM OFERTA o WHERE o.idoferta = %s;"
-        oferta = self.executeSQL(query, (idoferta,))
-        if len(oferta) > 0:
+        if self.exists_idoffer(idoferta):
+            query = "SELECT * FROM OFERTA o WHERE o.idoferta = %s;"
+            oferta = self.executeSQL(query, (idoferta,))
             return oferta[0]
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer with this id was not found")
 
-    #TODO CREATE OFFER
-    def add_offer(self):
-        pass
 
-    #TODO DELETE OFFER
-    def delete_offer(self):
-        pass
+    def exists_idproduct(self, idproducto: int) -> bool:
+        query = "SELECT * FROM producto WHERE idproducto = %s;"
+        variables = (idproducto,)
+        products_with_id = self.executeSQL(query, variables)
+        if products_with_id > 0:
+            return True
+        else:
+            return False
 
-    #TODO UPDATE OFFER
-    def update_offer(self):
-        pass
+    def exists_iduser(self, idusuario: int) -> bool:
+        query = "SELECT * FROM usuario WHERE idusuario = %s;"
+        variables = (idusuario,)
+        users_with_id = self.executeSQL(query, variables)
+        if users_with_id > 0:
+            return True
+        else:
+            return False
+
+    #CREATE OFFER (Falta Probar)
+    def add_offer(self, tipo: str, precio: str, producto_idproducto: int, estado: str, usuario_idusuario: int):
+        if self.exists_iduser(usuario_idusuario):
+            if self.exists_idproduct(producto_idproducto):
+                query = "INSERT INTO `mydb`.`oferta` VALUES ('%s','%s', %s,'%s',%s);"
+                variables = (tipo, precio, producto_idproducto, estado, usuario_idusuario,)
+                self.executeSQL(query, variables)
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+
+    def exists_idoffer(self, idoferta: int):
+        query = "SELECT * FROM oferta WHERE idoferta = %s;"
+        variables = (idoferta,)
+        offers_with_id = self.executeSQL(query, variables)
+        if offers_with_id > 0:
+            return True
+        else:
+            return False
+
+    #DELETE OFFER (Falta probar)
+    def delete_offer(self, idoferta: int):
+        if self.exists_idoffer(idoferta):
+            query = "DELETE FROM `mydb`.`oferta` WHERE idoferta = %s"
+            variables = (idoferta,)
+            self.executeSQL(query, variables)
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer with this id was not found")
+
+    #UPDATE OFFER (Falta probar)
+    def update_offer(self, nuevo_tipo: str, nuevo_precio: str, nuevo_producto_idproducto: int, nuevo_estado: str,
+                     nuevo_usuario_idusuario: int, idoferta: int, producto_idproducto: int, usuario_idusuario: int):
+        if self.exists_iduser(nuevo_usuario_idusuario) and self.exists_iduser(usuario_idusuario):
+            if self.exists_idproduct(nuevo_producto_idproducto) and self.exists_idproduct(producto_idproducto):
+                query = "UPDATE `mydb`.`oferta` SET `tipo` = '%s', `precio` = '%s', `producto_idproducto` = %s, " \
+                        "estado` = '%s', `usuario_idusuario` = %s WHERE `idoferta` = %s AND `producto_idproducto` = %s" \
+                        " AND `usuario_idusuario` = %s;"
+                variables = (nuevo_tipo, nuevo_precio, nuevo_producto_idproducto, nuevo_estado, nuevo_usuario_idusuario,
+                             idoferta, producto_idproducto, usuario_idusuario,)
+                self.executeSQL(query, variables)
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Product with old id or product with new id was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="User with old id or user with new id was not found")
 
     #BUY
     def get_buy_by_id(self, idcompra: int):
