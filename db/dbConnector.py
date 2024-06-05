@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from mysql.connector import pooling
+from datetime import datetime
 
 
 class ConnectionDB:
@@ -40,7 +41,9 @@ class ConnectionDB:
 
     #FALTA PROBARLO
     def get_pending_pawn_offerts_by_userid(self, idusuario: int):
-        query = "SELECT o.* FROM oferta o INNER JOIN producto p ON p.idproducto = o.producto_idproducto INNER JOIN empennio e ON e.producto_idproducto = o.producto_idproducto WHERE  o.estado = 'Pendiente Tienda' AND o.usuario_idusuario = %s;"
+        query = "SELECT o.* FROM oferta o INNER JOIN producto p ON p.idproducto = o.producto_idproducto" \
+                "INNER JOIN empennio e ON e.producto_idproducto = o.producto_idproducto WHERE " \
+                " o.estado = 'Pendiente Tienda' AND o.usuario_idusuario = %s;"
         variables = (idusuario,)
         list_offerts = self.executeSQL(query, variables)
         if len(list_offerts) > 0:
@@ -255,10 +258,14 @@ class ConnectionDB:
     def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`) " \
-                        "VALUES (%s,%s,%s,%s);"
-                variables = (precio, fecha, usuario_idusuario, producto_idproducto)
-                self.executeSQL(query, variables)
+                if self.check_date(fecha):
+                    query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`) " \
+                            "VALUES (%s,%s,%s,%s);"
+                    variables = (precio, fecha, usuario_idusuario, producto_idproducto)
+                    self.executeSQL(query, variables)
+                else:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                        detail="Date entered incorrectly (Y-m-d)")
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
@@ -297,12 +304,16 @@ class ConnectionDB:
         else:
             if self.exists_iduser(usuario_idusuario) and self.exists_iduser(n_usuario_idusuario):
                 if self.exists_idproduct(producto_idproducto) and self.exists_idproduct(n_producto_idproducto):
-                    query = "UPDATE `mydb`.`COMPRA` SET  `n_precio` = %s, `n_fecha` = %s, `n_usuario_idusuario` = %s, " \
-                            "`n_producto_idproducto` = %s WHERE `idcompra` = %s AND `usuario_idusuario` = %s " \
-                            "AND producto_idproducto = %s;"
-                    variables = (n_precio, n_fecha, n_usuario_idusuario, n_producto_idproducto, idcompra,
-                                 usuario_idusuario, producto_idproducto)
-                    self.executeSQL(query, variables)
+                    if self.check_date(n_fecha):
+                        query = "UPDATE `mydb`.`COMPRA` SET  `precio` = %s, `fecha` = %s, `usuario_idusuario` = %s, " \
+                                "`producto_idproducto` = %s WHERE `idcompra` = %s AND `usuario_idusuario` = %s " \
+                                "AND producto_idproducto = %s;"
+                        variables = (n_precio, n_fecha, n_usuario_idusuario, n_producto_idproducto, idcompra,
+                                     usuario_idusuario, producto_idproducto)
+                        self.executeSQL(query, variables)
+                    else:
+                        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                            detail="Date entered incorrectly (Y-m-d)")
                 else:
                     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                         detail="Product with old id or product with new id was not found")
@@ -335,19 +346,78 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sell with this id was not found")
 
-    #TODO CREATE SELL
-    def add_sell(self):
-        pass
+    def exists_idsell(self, idventa):
+        query = "SELECT * FROM venta WHERE idventa = %s;"
+        variables = (idventa,)
+        sells = self.executeSQL(query, variables)
+        if len(sells) > 0:
+            return True
+        else:
+            return False
 
-    #TODO DELETE SELL
-    def delete_sell(self):
-        pass
+    #CREATE SELL (falta probar)
+    def add_sell(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int):
+        if self.exists_iduser(usuario_idusuario):
+            if self.exists_idproduct(producto_idproducto):
+                if self.check_date(fecha):
+                    query = "INSERT INTO `mydb`.`VENTA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`) " \
+                            "VALUES (%s,%s,%s,%s);"
+                    variables = (precio, fecha, usuario_idusuario, producto_idproducto)
+                    self.executeSQL(query, variables)
+                else:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                        detail="Date entered incorrectly (Y-m-d)")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
-    #TODO UPDATE SELL
-    def update_sell(self):
-        pass
+    #DELETE SELL (sin probar)
+    def delete_sell(self, idventa: int):
+        if not self.exists_idsell(idventa):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Sell with this id does not exist")
+        else:
+            query = "DELETE FROM `mydb`.`VENTA` WHERE `idventa` = %s;"
+            variables = (idventa,)
+            self.executeSQL(query, variables)
+
+    #UPDATE SELL
+    def update_sell(self, n_precio: int, n_fecha: str, n_usuario_idusuario: int,
+                    n_producto_idproducto: int, idventa: int, usuario_idusuario: int, producto_idproducto: int):
+        if not self.exists_idsell(idventa):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Sell with this id does not exist")
+        else:
+            if self.exists_iduser(usuario_idusuario) and self.exists_iduser(n_usuario_idusuario):
+                if self.exists_idproduct(producto_idproducto) and self.exists_idproduct(n_producto_idproducto):
+                    if self.check_date(n_fecha):
+                        query = "UPDATE `mydb`.`COMPRA` SET  `precio` = %s, `fecha` = %s, `usuario_idusuario` = %s," \
+                                "`producto_idproducto` = %s WHERE `idventa` = %s AND `usuario_idusuario` = %s " \
+                                "AND producto_idproducto = %s;"
+                        variables = (n_precio, n_fecha, n_usuario_idusuario, n_producto_idproducto, idventa,
+                                     usuario_idusuario, producto_idproducto)
+                        self.executeSQL(query, variables)
+                    else:
+                        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                            detail="Date entered incorrectly (Y-m-d)")
+                else:
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                        detail="Product with old id or product with new id was not found")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="User with old id or user with new id was not found")
 
     #PAWN
+
+    def exists_idpawn(self, idempennio):
+        query = "SELECT * FROM empennio WHERE idempennio = %s;"
+        pawns = self.executeSQL(query, (idempennio,))
+        if len(pawns) > 0:
+            return True
+        else:
+            return False
+
     def get_pawn_by_id(self, idempennio: int):
         query = "SELECT * FROM PRESTAMO p WHERE p.idprestamo = %s;"
         pawn = self.executeSQL(query, (idempennio,))
@@ -356,14 +426,67 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawn with this id was not found")
 
-    #TODO CREATE PAWN
-    def add_pawn(self):
-        pass
+    #CREATE PAWN (falta probar)
+    def add_pawn(self, precio: int, estado: str, fecha_inicio: str, fecha_final: str,
+                 interes: int, usuario_idusuario: int, producto_idproducto: int):
+        if self.exists_iduser(usuario_idusuario):
+            if self.exists_idproduct(producto_idproducto):
+                if self.check_date(fecha_inicio) and self.check_date(fecha_final):
+                    query = "INSERT INTO `mydb`.`EMPENNIO` (`precio`,`estado`, `fecha_inicio`, `fecha_final`," \
+                            " `interes`, `usuario_idusuario`, `producto_idproducto`) VALUES (%s,%s,%s,%s,%s,%s,%s);"
+                    variables = (precio, estado, fecha_inicio, fecha_final, interes, usuario_idusuario,
+                                 producto_idproducto)
+                    self.executeSQL(query, variables)
+                else:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                        detail="Initial date or final date entered incorrectly (Y-m-d)")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
-    #TODO DELETE PAWN
-    def delete_pawn(self):
-        pass
+    #DELETE PAWN (falta probar)
+    def delete_pawn(self, idempennio: int):
+        if not self.exists_idpawn(idempennio):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawn with this id does not exist")
+        else:
+            query = "DELETE FROM `mydb`.`EMPENNIO` WHERE `idempennio` = %s;"
+            variables = (idempennio,)
+            self.executeSQL(query, variables)
 
-    #TODO UPDATE PAWN
-    def update_pawn(self):
-        pass
+    #UPDATE PAWN (falta probar)
+    def update_pawn(self, n_precio: int, n_estado: str, n_fecha_inicio: str, n_fecha_final: str, n_interes: str,
+                    n_usuario_idusuario: int, n_producto_idproducto: int, idempennio: int, usuario_idusuario: int,
+                    producto_idproducto: int):
+        if not self.exists_idpawn(idempennio):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawn with this id does not exist")
+        else:
+            if self.exists_iduser(usuario_idusuario) and self.exists_iduser(n_usuario_idusuario):
+                if self.exists_idproduct(producto_idproducto) and self.exists_idproduct(n_producto_idproducto):
+                    if self.check_date(n_fecha_inicio) and self.check_date(n_fecha_final):
+                        query = "UPDATE `mydb`.`EMPENNIO` SET  `precio` = %s, `estado` = %s, `fecha_inicio` = %s," \
+                                " `fecha_final` = %s, `interes` = %s, `usuario_idusuario` = %s," \
+                                "`producto_idproducto` = %s WHERE `idempennio` = %s AND `usuario_idusuario` = %s " \
+                                "AND producto_idproducto = %s;"
+                        variables = (n_precio, n_estado, n_fecha_inicio, n_fecha_final, n_interes, n_usuario_idusuario,
+                                     n_producto_idproducto, idempennio, usuario_idusuario, producto_idproducto)
+                        self.executeSQL(query, variables)
+                    else:
+                        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                            detail="Date entered incorrectly (Y-m-d)")
+                else:
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                        detail="Product with old id or product with new id was not found")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="User with old id or user with new id was not found")
+
+    @staticmethod
+    def check_date(date: str) -> bool:
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+            return True
+        except ValueError:
+            return False
