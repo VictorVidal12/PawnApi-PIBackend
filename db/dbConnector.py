@@ -40,9 +40,10 @@ class ConnectionDB:
             connection.close()
 
     #FALTA PROBARLO
-    def get_pending_pawn_offerts_by_userid(self, idusuario):
+    def get_pending_pawn_offerts_by_userid(self, idusuario: int):
         query = "SELECT o.* FROM oferta o INNER JOIN producto p ON p.idproducto = o.producto_idproducto INNER JOIN empennio e ON e.producto_idproducto = o.producto_idproducto WHERE  o.estado = 'Pendiente Tienda' AND o.usuario_idusuario = %s;"
-        list_offerts = self.executeSQL(query, idusuario)
+        variables = (idusuario, )
+        list_offerts = self.executeSQL(query, variables)
         if len(list_offerts) > 0:
             return list_offerts
         else:
