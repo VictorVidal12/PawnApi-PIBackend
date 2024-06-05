@@ -54,7 +54,7 @@ class ConnectionDB:
     # USUARIOS
     def exists_shop_type_user_with_this_id(self, idusuario):
         query = "SELECT * FROM usuario WHERE tipo = 'tienda' AND idusuario = %s;"
-        shop_users = self.executeSQL(query, (idusuario, ))
+        shop_users = self.executeSQL(query, (idusuario,))
         if len(shop_users) > 0:
             return True
         else:
@@ -434,8 +434,33 @@ class ConnectionDB:
         else:
             return False
 
-    def get_shop_sells(self, idusuario: int):
-        pass
+    # HU: Obtener productos que la tienda está vendiendo (con id)
+    def get_shop_sells_with_id(self, idusuario: int):
+        if self.exists_shop_type_user_with_this_id(idusuario):
+            query = "SELECT p.* FROM venta v INNER JOIN producto p ON v.usuario_idusuario = p.usuario_idusuario" \
+                    "WHERE v.usuario_idusuario = %s;"
+            variables = (idusuario,)
+            sells = self.executeSQL(query, variables)
+            if len(sells) > 0:
+                return sells
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Sells with this id was not found in shop type users")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="User with this id was not found in shop type users")
+
+    # HU: Obtener productos que la tienda está vendiendo (sin id)
+    def get_shop_sells(self):
+        query = "SELECT * FROM venta v INNER JOIN producto p ON p.usuario_idusuario = v.usuario_idusuario"\
+                "INNER JOIN usuario u ON v.usuario_idusuario = u.idusuario WHERE u.tipo = 'tienda';"
+        sells = self.executeSQL(query)
+        if len(sells) > 0:
+            return sells
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Sells with this type of user was not found")
+
 
     def get_sells_with_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
