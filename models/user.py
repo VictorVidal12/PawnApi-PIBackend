@@ -7,4 +7,7 @@ class User (BaseModel):
     correo_electronico: str
     contrasennia: str
     tipo: str
+    genero: str
+    nacimiento: str
+    telefono: str
 

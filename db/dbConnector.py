@@ -1,39 +1,43 @@
 from fastapi import HTTPException, status
 import mysql.connector
-
-config = {'user': 'myadmin',
-          'host': 'serverflexibletest.mysql.database.azure.com',
-          'password': 'HolaMundo*',
-          'database': 'mydb',
-          'port': 3306,  # Puerto predeterminado de MySQL
-          'raise_on_warnings': True}  # Para que se generen excepciones en caso de advertencias
+from mysql.connector import pooling, Error
 
 
 class ConnectionDB:
-    conn = None  # Mantén la conexión abierta en la instancia
 
     def __init__(self):
-        pass
+        dbconfig = {'user': 'myadmin',
+                    'host': 'serverflexibletest.mysql.database.azure.com',
+                    'password': 'HolaMundo*',
+                    'database': 'mydb',
+                    'port': 3306,  # Puerto predeterminado de MySQL
+                    'raise_on_warnings': True}
+        self.conn = None  # Mantén la conexión abierta en la instancia
+        self.pool = pooling.MySQLConnectionPool(pool_name="mypool",
+                                                pool_size=5,
+                                                **dbconfig)
 
     def executeSQL(self, consulta_sql, variables_adicionales=None):
+        connection = self.pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
         try:
-            conn = mysql.connector.connect(**config)  # Abre la conexión si no está abierta
+            # Agregar la propiedad y obtener el id de la propiedad recién agregada
+            cursor.execute(consulta_sql, variables_adicionales)
 
-            if conn.is_connected():
-                cursor = conn.cursor()
-                cursor.execute(consulta_sql, variables_adicionales)
+            if consulta_sql.strip().upper().startswith("INSERT") or consulta_sql.strip().upper().startswith(
+                    "UPDATE") or consulta_sql.strip().upper().startswith(
+                "DELETE") or consulta_sql.strip().upper().startswith("CREATE"):
+                connection.commit()
 
-                if consulta_sql.strip().upper().startswith("INSERT") or consulta_sql.strip().upper().startswith(
-                        "UPDATE") or consulta_sql.strip().upper().startswith(
-                    "DELETE") or consulta_sql.strip().upper().startswith("CREATE"):
-                    conn.commit()
-                    return None
+                return cursor.lastrowid if consulta_sql.strip().upper().startswith("INSERT") else None
+            result = cursor.fetchall()
 
-                resultados = cursor.fetchall()
-                conn.close()
-                return resultados
-        except mysql.connector.Error as e:
-            print("Error al conectar a la base de datos:", e)
+            return result
+        except Exception as e:
+            raise e
+        finally:
+            cursor.close()
+            connection.close()
 
     def get_users(self):
         query = "SELECT * FROM USUARIO"
@@ -235,6 +239,14 @@ class ConnectionDB:
         return buys
 
     #SELL
+    def get_sells(self):
+        query = "SELECT * FROM VENTA;"
+        sell = self.executeSQL(query, ())
+        if len(sell) > 0:
+            return sell[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sells was not found")
+
     def get_sell_by_id(self, idventa: int):
         query = "SELECT * FROM VENTA v WHERE v.idventa = %s;"
         sell = self.executeSQL(query, (idventa,))

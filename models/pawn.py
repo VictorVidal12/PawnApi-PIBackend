@@ -7,7 +7,6 @@ class Pawn(BaseModel):
     estado: str
     fecha_inicio: str
     fecha_final: str
-    medio_pago : str | None
-    interes : int
+    interes: int
     usuario_idusuario: int
     producto_idproducto: int
