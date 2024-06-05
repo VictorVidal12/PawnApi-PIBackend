@@ -7,11 +7,11 @@ class ConnectionDB:
 
     def __init__(self):
         dbconfig = {'user': 'myadmin',
-          'host': 'serverflexibletest.mysql.database.azure.com',
-          'password': 'HolaMundo*',
-          'database': 'mydb',
-          'port': 3306,  # Puerto predeterminado de MySQL
-          'raise_on_warnings': True}  # Para que se generen excepciones en caso de advertencias
+                    'host': 'serverflexibletest.mysql.database.azure.com',
+                    'password': 'HolaMundo*',
+                    'database': 'mydb',
+                    'port': 3306,  # Puerto predeterminado de MySQL
+                    'raise_on_warnings': True}  # Para que se generen excepciones en caso de advertencias
         self.conn = None  # Mantén la conexión abierta en la instancia
         self.pool = pooling.MySQLConnectionPool(pool_name="mypool",
                                                 pool_size=5,
@@ -19,7 +19,7 @@ class ConnectionDB:
 
     def executeSQL(self, consulta_sql, variables_adicionales=None):
         connection = self.pool.get_connection()
-        cursor = connection.cursor(dictionary = True)
+        cursor = connection.cursor(dictionary=True)
         try:
             # Agregar la propiedad y obtener el id de la propiedad recién agregada
             cursor.execute(consulta_sql, variables_adicionales)
@@ -39,16 +39,14 @@ class ConnectionDB:
             cursor.close()
             connection.close()
 
-    # Crear usuario
-
-
-
-    #Obtener ofertas de empeño pendientes
-    def get_pending_pawn_offerts(self):
-        query = "SELECT * FROM oferta WHERE estado = 'Pendiente';"
-        offerts = self.executeSQL(query)
-        return offerts
-
+    #FALTA PROBARLO
+    def get_pending_pawn_offerts_by_userid(self, idusuario):
+        query = "SELECT o.* FROM oferta o INNER JOIN producto p ON p.idproducto = o.producto_idproducto INNER JOIN empennio e ON e.producto_idproducto = o.producto_idproducto WHERE  o.estado = 'Pendiente Tienda' AND o.usuario_idusuario = %s;"
+        list_offerts = self.executeSQL(query, idusuario)
+        if len(list_offerts) > 0:
+            return list_offerts
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This user does not have pending pawn offerts.")
 
     def get_users(self):
         query = "SELECT * FROM USUARIO"
