@@ -177,7 +177,7 @@ class ConnectionDB:
         query = "SELECT * FROM producto WHERE idproducto = %s;"
         variables = (idproducto,)
         products_with_id = self.executeSQL(query, variables)
-        if products_with_id > 0:
+        if len(products_with_id) > 0:
             return True
         else:
             return False
@@ -186,7 +186,7 @@ class ConnectionDB:
         query = "SELECT * FROM usuario WHERE idusuario = %s;"
         variables = (idusuario,)
         users_with_id = self.executeSQL(query, variables)
-        if users_with_id > 0:
+        if len(users_with_id) > 0:
             return True
         else:
             return False
@@ -207,7 +207,7 @@ class ConnectionDB:
         query = "SELECT * FROM oferta WHERE idoferta = %s;"
         variables = (idoferta,)
         offers_with_id = self.executeSQL(query, variables)
-        if offers_with_id > 0:
+        if len(offers_with_id) > 0:
             return True
         else:
             return False
@@ -248,10 +248,10 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
 
-    def add_buy(self, precio: int, fecha: str, medio_pago: str, usuario_idusuario: int, producto_idproducto: int):
+    def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int):
         query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`medio_pago`,`usuario_idusuario`,`producto_idproducto`) " \
                 "VALUES (%s,%s,%s,%s,%s);"
-        variables = (precio, fecha, medio_pago, usuario_idusuario, producto_idproducto)
+        variables = (precio, fecha, usuario_idusuario, producto_idproducto)
         self.executeSQL(query, variables)
 
     def buy_with_this_id_exist(self, idcompra: int):
