@@ -39,6 +39,16 @@ class ConnectionDB:
             cursor.close()
             connection.close()
 
+    # Crear usuario
+
+
+
+    #Obtener ofertas de empeño pendientes
+    def get_pending_pawn_offerts(self):
+        query = "SELECT * FROM oferta WHERE estado = 'Pendiente';"
+        offerts = self.executeSQL(query)
+        return offerts
+
 
     def get_users(self):
         query = "SELECT * FROM USUARIO"
@@ -53,14 +63,15 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email was not found")
 
-    def add_user(self, nombre: str, correo_electronico: str, contrasennia: str, tipo: str):
+    def add_user(self, nombre: str, correo_electronico: str, contrasennia: str, tipo: str
+                 , genero: str, nacimiento: str, telefono: str):
         if self.user_with_this_email_exist(correo_electronico):
             raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-                                detail="You cannot post an User  with an existing email")
+                                detail="You cannot post an User with an existing email")
         else:
-            query = "INSERT INTO `mydb`.`USUARIO` (`nombre`,`correo_electronico`,`contrasennia`,`tipo`) " \
-                    "VALUES (%s,%s,%s,%s);"
-            variables = (nombre, correo_electronico, contrasennia, tipo)
+            query = "INSERT INTO `mydb`.`USUARIO` (`nombre`,`correo_electronico`,`contrasennia`,`tipo`, `genero`,`nacimiento`,`telefono`) " \
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s);"
+            variables = (nombre, correo_electronico, contrasennia, tipo, genero, nacimiento, telefono)
             self.executeSQL(query, variables)
 
     def delete_user(self, correo_electronico: str):
