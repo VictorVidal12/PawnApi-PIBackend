@@ -508,7 +508,7 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Sells with this type of user was not found")
 
-    def get_sells_with_userid(self, idusuario: int):
+    def get_sells_by_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
             query = "SELECT * FROM venta WHERE usuario_idusuario = %s"
             variables = (idusuario,)

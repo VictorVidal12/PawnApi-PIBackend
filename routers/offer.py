@@ -14,7 +14,7 @@ dbConnect = ConnectionDB()
 offerRouter = APIRouter(prefix="/offer", tags=["offer"])
 
 @offerRouter.post("/MakePawnByClient", status_code= status.HTTP_201_CREATED,response_model=Offer)
-async def offer(nombre, descripcion, categoria, precio : int, usuario_idusario : int,image: UploadFile = File(...)):
+async def offer(nombre, descripcion, categoria, precio : int, id_usuario : int,image: UploadFile = File(...)):
     categoria = check_category(categoria)
     img_dir = await upload_img(absolute_imagedir, image)
     dict_product = {
@@ -25,11 +25,11 @@ async def offer(nombre, descripcion, categoria, precio : int, usuario_idusario :
     }
     dbConnect.add_product(dict_product["imagen"],dict_product["nombre"], dict_product["descripcion"], dict_product["categoria"] )
     product = dbConnect.get_product_by_image(img_dir)
-    dbConnect.get_user_by_id(usuario_idusario)
+    dbConnect.get_user_by_id(id_usuario)
     offer = {
         "precio" : precio,
         "producto_idproducto" : product["idproducto"],
-        "usuario_idusuario" : usuario_idusario
+        "usuario_idusuario" : id_usuario
     }
     offer =dbConnect.add_offer_type_pawn_by_client(offer["precio"], offer["producto_idproducto"], offer["usuario_idusuario"])
     return JSONResponse(content=offer, status_code=status.HTTP_201_CREATED)
@@ -49,10 +49,10 @@ async def offer(nombre, descripcion, categoria, precio : int, usuario_idusario :
     dbConnect.get_user_by_id(usuario_idusario)
     offer = {
         "precio" : precio,
-        "producto_idproducto" : product.idproducto,
+        "producto_idproducto" : product["idproducto"],
         "usuario_idusuario" : usuario_idusario
     }
-    offer =dbConnect.add_offer_type_sell_by_client(offer["precio"], offer["producto_idproducto"], offer["usuario_idusario"])
+    offer =dbConnect.add_offer_type_sell_by_client(offer["precio"], offer["producto_idproducto"], offer["usuario_idusuario"])
     return JSONResponse(content=offer, status_code=status.HTTP_201_CREATED)
 
 def delete_image(image_path: str):
