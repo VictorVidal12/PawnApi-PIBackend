@@ -197,7 +197,7 @@ class ConnectionDB:
 
     #OFERTA
 
-    def get_peding_offer_by_userid(self, idusuario: int):
+    def get_peding_sell_offer_by_userid(self, idusuario: int):
         if self.exists_iduser(idusuario):
             query = "SELECT * FROM oferta WHERE tipo = 'venta' AND estado = 'pendiente_tienda' AND idusuario = %s;"
             peding_offers = self.executeSQL(query, (idusuario,))
