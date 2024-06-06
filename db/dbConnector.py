@@ -39,18 +39,6 @@ class ConnectionDB:
             cursor.close()
             connection.close()
 
-    #FALTA PROBARLO
-    def get_pending_pawn_offerts_by_userid(self, idusuario: int):
-        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON p.idproducto = o.producto_idproducto WHERE " \
-                " o.estado = 'Pendiente Tienda' AND o.usuario_idusuario = %s AND o.tipo = 'empennio';"
-        variables = (idusuario,)
-        list_offerts = self.executeSQL(query, variables)
-        if len(list_offerts) > 0:
-            return list_offerts
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="This user does not have pending pawn offerts.")
-
     # USUARIOS
     def exists_shop_type_user_with_this_id(self, idusuario):
         query = "SELECT * FROM usuario WHERE tipo = 'tienda' AND idusuario = %s;"
@@ -204,7 +192,20 @@ class ConnectionDB:
             if len(peding_offers) > 0:
                 return peding_offers
             else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offers in peding state was not found")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers in peding state was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+
+    def get_peding_pawn_offer_by_userid(self, idusuario: int):
+        if self.exists_iduser(idusuario):
+            query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado = 'pendiente_tienda' AND usuario_idusuario = %s;"
+            peding_offers = self.executeSQL(query, (idusuario,))
+            if len(peding_offers) > 0:
+                return peding_offers
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers in peding state was not found")
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
@@ -213,7 +214,7 @@ class ConnectionDB:
     def add_offer_type_pawn_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario)"\
+                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario)" \
                           " VALUES ('empennio', %s, %s, 'pendiente_tienda', %s);"
                 variables_1 = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query_1, variables_1)
@@ -481,11 +482,12 @@ class ConnectionDB:
         else:
             return False
 
-    # HU: Obtener productos que la tienda está vendiendo (con id)
-    def get_shop_sells_with_id(self, idusuario: int):
+    # HU: Obtener las ofertas de tipo venta , en estado pendiente_cliente  de la tienda
+    def get_sells_offers_in_client_peding_state(self):
+        idusuario = 8
         if self.exists_shop_type_user_with_this_id(idusuario):
-            query = "SELECT p.* FROM venta v INNER JOIN producto p ON v.usuario_idusuario = p.usuario_idusuario" \
-                    "WHERE v.usuario_idusuario = %s;"
+            query = "SELECT p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                    " WHERE o.usuario_idusuario = %s AND o.tipo = 'venta' AND o.estado = 'pendiente_cliente';"
             variables = (idusuario,)
             sells = self.executeSQL(query, variables)
             if len(sells) > 0:
@@ -496,17 +498,6 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="User with this id was not found in shop type users")
-
-    # HU: Obtener productos que la tienda está vendiendo (sin id)
-    def get_shop_sells(self):
-        query = "SELECT * FROM venta v INNER JOIN producto p ON p.usuario_idusuario = v.usuario_idusuario" \
-                "INNER JOIN usuario u ON v.usuario_idusuario = u.idusuario WHERE u.tipo = 'tienda';"
-        sells = self.executeSQL(query)
-        if len(sells) > 0:
-            return sells
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Sells with this type of user was not found")
 
     def get_sells_by_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
