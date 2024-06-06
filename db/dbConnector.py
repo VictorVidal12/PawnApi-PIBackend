@@ -449,9 +449,9 @@ class ConnectionDB:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail="User with old id or user with new id was not found")
 
-    def get_buy_by_user_id(self, idusuario: int):
+    def get_shopping_by_user_id(self, idusuario: int):
         if not self.buy_with_this_user_id_exists(idusuario):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping with this id were not found")
         else:
             query = "SELECT * FROM COMPRA c WHERE c.usuario_idusuario = %s;"
             variables = (idusuario,)
