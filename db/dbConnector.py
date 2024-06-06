@@ -201,7 +201,8 @@ class ConnectionDB:
     def add_offer_type_pawn_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario) VALUES ('empennio', %s, %s, 'pendiente_tienda', %s);"
+                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario)"\
+                          " VALUES ('empennio', %s, %s, 'pendiente_tienda', %s);"
                 variables_1 = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query_1, variables_1)
 
@@ -223,9 +224,10 @@ class ConnectionDB:
     def add_offer_type_sell_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`oferta` VALUES ('venta',%s, %s,'pendiente_tienda',%s);"
-                variables = (precio, producto_idproducto, usuario_idusuario,)
-                self.executeSQL(query, variables)
+                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario)" \
+                          " VALUES ('venta', %s, %s, 'pendiente_tienda', %s);"
+                variables_1 = (precio, producto_idproducto, usuario_idusuario,)
+                self.executeSQL(query_1, variables_1)
                 query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
                 element = self.executeSQL(query_2)
                 return element
