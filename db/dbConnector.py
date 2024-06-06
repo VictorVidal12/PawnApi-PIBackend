@@ -250,8 +250,8 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
     # HU: Actualizar oferta para contraofertar el precio (cliente)
-    def update_offer_with_counteroffer_client(self, contra_oferta: str, idoferta, usuario_idusuario,
-                                              producto_idproducto):
+    def update_offer_with_counteroffer_client(self, contra_oferta: int, idoferta: int, usuario_idusuario: int,
+                                              producto_idproducto: int):
         if self.exists_idoffer(idoferta):
             if self.exists_client_type_user_with_this_id(usuario_idusuario):
                 if self.exists_idproduct(producto_idproducto):
@@ -271,8 +271,9 @@ class ConnectionDB:
                                 detail="Offer with this id was not found")
 
     # HU: Actualizar oferta para contraofertar el precio (tienda)
-    def update_offer_with_counteroffer_shop(self, contra_oferta: str, idoferta, usuario_idusuario,
-                                            producto_idproducto):
+    def update_offer_with_counteroffer_shop(self, contra_oferta: int, idoferta: int,
+                                            producto_idproducto: int):
+        usuario_idusuario = 8
         if self.exists_idoffer(idoferta):
             if self.exists_shop_type_user_with_this_id(usuario_idusuario):
                 if self.exists_idproduct(producto_idproducto):
@@ -317,6 +318,63 @@ class ConnectionDB:
             return False
 
     #CREATE OFFER (Falta Probar)
+
+    #HU: Obtener ofertas de compra en proceso de la tienda
+    def get_buy_offers_by_shop_process_state(self):
+        idtienda = 8
+        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND estado = 'en_curso' AND tipo = 'compra';"
+        buys = self.executeSQL(query, (idtienda,))
+        if len(buys) > 0:
+            return buys
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Buys by shop with this state was not found")
+
+    #HU: Obtener ofertas de compra en proceso de la tienda
+    def get_buys_offers_by_shop_process_state(self):
+        idtienda = 8
+        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND estado = 'en_curso' AND tipo = 'compra';"
+        buys = self.executeSQL(query, (idtienda,))
+        if len(buys) > 0:
+            return buys
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Buys by shop with this state was not found")
+
+    # HU: Obtener ofertas de empeño en proceso de la tienda
+    def get_pawns_offers_by_shop_process_state(self):
+        idtienda = 8
+        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND estado = 'en_curso' AND tipo = 'empennio';"
+        pawns = self.executeSQL(query, (idtienda,))
+        if len(pawns) > 0:
+            return pawns
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns by shop with this state was not found")
+
+    #HU: Obtener ofertas de venta en proceso de la tienda
+    def get_sells_offers_by_shop_process_state(self):
+        idtienda = 8
+        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND estado = 'en_curso' AND tipo = 'venta';"
+        sells = self.executeSQL(query, (idtienda,))
+        if len(sells) > 0:
+            return sells
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Sells by shop with this state was not found")
+
+    # HU: Obtener ofertas de empeño en pendiente de la tienda
+
+    def get_pawns_offers_by_shop_in_peding_client_state(self):
+        idtienda = 8
+        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND estado = 'pendiente_cliente' AND tipo = 'empennio';"
+        pawns = self.executeSQL(query, (idtienda,))
+        if len(pawns) > 0:
+            return pawns
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns by shop with this state was not found")
+
     def add_offer(self, tipo: str, precio: str, producto_idproducto: int, estado: str, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
@@ -499,6 +557,7 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="User with this id was not found in shop type users")
 
+    #HU: Obtener las ventas de un usuario
     def get_sells_by_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
             query = "SELECT * FROM venta WHERE usuario_idusuario = %s"
