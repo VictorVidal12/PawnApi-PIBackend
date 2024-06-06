@@ -91,6 +91,9 @@ class ConnectionDB:
                     "VALUES (%s,%s,%s,%s,%s,%s,%s);"
             variables = (nombre, correo_electronico, contrasennia, tipo, genero, nacimiento, telefono)
             self.executeSQL(query, variables)
+            query_2 = "SELECT * FROM usuario ORDER BY idusuario DESC LIMIT 1;"
+            element = self.executeSQL(query_2)
+            return element
 
     def delete_user(self, correo_electronico: str):
         if not self.user_with_this_email_exist(correo_electronico):
@@ -135,6 +138,9 @@ class ConnectionDB:
                 "VALUES (%s,%s,%s,%s);"
         variables = (imagen, nombre, descripcion, categoria)
         self.executeSQL(query, variables)
+        query_2 = "SELECT * FROM producto ORDER BY idproducto DESC LIMIT 1;"
+        element = self.executeSQL(query_2)
+        return element
 
     def get_product_by_image(self, image: str):
         query = "SELECT * FROM PRODUCTO p WHERE p.imagen = %s;"
@@ -288,6 +294,9 @@ class ConnectionDB:
                 query = "INSERT INTO `mydb`.`oferta` VALUES (%s,%s, %s,%s,%s);"
                 variables = (tipo, precio, producto_idproducto, estado, usuario_idusuario,)
                 self.executeSQL(query, variables)
+                query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
+                element = self.executeSQL(query_2)
+                return element
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
@@ -351,6 +360,9 @@ class ConnectionDB:
                             "VALUES (%s,%s,%s,%s);"
                     variables = (precio, fecha, usuario_idusuario, producto_idproducto)
                     self.executeSQL(query, variables)
+                    query_2 = "SELECT * FROM compra ORDER BY idcompra DESC LIMIT 1;"
+                    element = self.executeSQL(query_2)
+                    return element
                 else:
                     raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                         detail="Date entered incorrectly (Y-m-d)")
@@ -459,7 +471,7 @@ class ConnectionDB:
 
     # HU: Obtener productos que la tienda está vendiendo (sin id)
     def get_shop_sells(self):
-        query = "SELECT * FROM venta v INNER JOIN producto p ON p.usuario_idusuario = v.usuario_idusuario"\
+        query = "SELECT * FROM venta v INNER JOIN producto p ON p.usuario_idusuario = v.usuario_idusuario" \
                 "INNER JOIN usuario u ON v.usuario_idusuario = u.idusuario WHERE u.tipo = 'tienda';"
         sells = self.executeSQL(query)
         if len(sells) > 0:
@@ -467,7 +479,6 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Sells with this type of user was not found")
-
 
     def get_sells_with_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
@@ -496,6 +507,9 @@ class ConnectionDB:
                             "VALUES (%s,%s,%s,%s);"
                     variables = (precio, fecha, usuario_idusuario, producto_idproducto)
                     self.executeSQL(query, variables)
+                    query_2 = "SELECT * FROM venta ORDER BY idventa DESC LIMIT 1;"
+                    element = self.executeSQL(query_2)
+                    return element
                 else:
                     raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                         detail="Date entered incorrectly (Y-m-d)")
@@ -569,6 +583,9 @@ class ConnectionDB:
                     variables = (precio, estado, fecha_inicio, fecha_final, interes, usuario_idusuario,
                                  producto_idproducto)
                     self.executeSQL(query, variables)
+                    query_2 = "SELECT * FROM empennio ORDER BY idempennio DESC LIMIT 1;"
+                    element = self.executeSQL(query_2)
+                    return element
                 else:
                     raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                         detail="Initial date or final date entered incorrectly (Y-m-d)")
