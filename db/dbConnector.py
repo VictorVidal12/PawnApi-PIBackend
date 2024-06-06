@@ -234,7 +234,7 @@ class ConnectionDB:
         if self.exists_idoffer(idoferta):
             if self.exists_client_type_user_with_this_id(usuario_idusuario):
                 if self.exists_idproduct(producto_idproducto):
-                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'Pendiente Tienda' " \
+                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'pendiente_tienda' " \
                             "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `usuario_idusuario` = %s;"
                     variables = (contra_oferta, idoferta, producto_idproducto, usuario_idusuario,)
                     self.executeSQL(query, variables)
@@ -255,7 +255,7 @@ class ConnectionDB:
         if self.exists_idoffer(idoferta):
             if self.exists_shop_type_user_with_this_id(usuario_idusuario):
                 if self.exists_idproduct(producto_idproducto):
-                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'Pendiente cliente' " \
+                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'pendiente_cliente' " \
                             "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `usuario_idusuario` = %s;"
                     variables = (contra_oferta, idoferta, producto_idproducto, usuario_idusuario,)
                     self.executeSQL(query, variables)
