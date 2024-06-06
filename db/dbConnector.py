@@ -198,15 +198,21 @@ class ConnectionDB:
     #OFERTA
     # El cliente crea la oferta
     # HU: Crear oferta de empeño(cliente)
-    def add_offer_type_pawn_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
+    def add_offer_type_pawn_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query_1 = "INSERT INTO `mydb`.`oferta` VALUES ('empennio',%s, %s,'pendiente_tienda',%s);"
+                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario) VALUES ('empennio', %s, %s, 'pendiente_tienda', %s);"
                 variables_1 = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query_1, variables_1)
-                query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
-                element = self.executeSQL(query_2)
-                return element
+
+                query_2 = "SELECT * FROM `mydb`.`oferta` ORDER BY idoferta DESC LIMIT 1;"
+                result = self.executeSQL(query_2)
+
+                if result:
+                    return result[0]  # Devuelve el primer resultado si existe
+                else:
+                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                        detail="Failed to retrieve the inserted offer")
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
@@ -214,7 +220,7 @@ class ConnectionDB:
 
     # El cliente crea la oferta
     # HU: Crear oferta de venta (cliente)
-    def add_offer_type_sell_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
+    def add_offer_type_sell_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 query = "INSERT INTO `mydb`.`oferta` VALUES ('venta',%s, %s,'pendiente_tienda',%s);"

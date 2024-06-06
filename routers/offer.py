@@ -1,6 +1,5 @@
 from fastapi import APIRouter, status, HTTPException, UploadFile, File
 from db.dbConnector import ConnectionDB
-from models.product import Product
 from models.offer import Offer
 from fastapi.responses import JSONResponse
 import os
@@ -14,8 +13,8 @@ absolute_imagedir = os.path.join(current_dir, IMAGEDIR)
 dbConnect = ConnectionDB()
 offerRouter = APIRouter(prefix="/offer", tags=["offer"])
 
-@offerRouter.post("/MakePawn", status_code= status.HTTP_201_CREATED)
-async def offer(nombre, descripcion, categoria, precio : int, tipo: str, usuario_idusario : int, estado : str,image: UploadFile = File(...)):
+@offerRouter.post("/MakePawnByClient", status_code= status.HTTP_201_CREATED,response_model=Offer)
+async def offer(nombre, descripcion, categoria, precio : int, usuario_idusario : int,image: UploadFile = File(...)):
     categoria = check_category(categoria)
     img_dir = await upload_img(absolute_imagedir, image)
     dict_product = {
@@ -28,17 +27,15 @@ async def offer(nombre, descripcion, categoria, precio : int, tipo: str, usuario
     product = dbConnect.get_product_by_image(img_dir)
     dbConnect.get_user_by_id(usuario_idusario)
     offer = {
-        "tipo" : tipo,
         "precio" : precio,
-        "producto_idproducto" : product.idproducto,
-        "estado" : check_state(estado),
+        "producto_idproducto" : product["idproducto"],
         "usuario_idusuario" : usuario_idusario
     }
     offer =dbConnect.add_offer_type_pawn_by_client(offer["precio"], offer["producto_idproducto"], offer["usuario_idusuario"])
     return JSONResponse(content=offer, status_code=status.HTTP_201_CREATED)
 
-@offerRouter.post("/MakeSell", status_code= status.HTTP_201_CREATED)
-async def offer(nombre, descripcion, categoria, precio : int, tipo: str, usuario_idusario : int, estado : str,image: UploadFile = File(...)):
+@offerRouter.post("/MakeSellByClient", status_code= status.HTTP_201_CREATED, response_model=Offer)
+async def offer(nombre, descripcion, categoria, precio : int, usuario_idusario : int,image: UploadFile = File(...)):
     categoria = check_category(categoria)
     img_dir = await upload_img(absolute_imagedir, image)
     dict_product = {
@@ -51,10 +48,8 @@ async def offer(nombre, descripcion, categoria, precio : int, tipo: str, usuario
     product = dbConnect.get_product_by_image(img_dir)
     dbConnect.get_user_by_id(usuario_idusario)
     offer = {
-        "tipo" : tipo,
         "precio" : precio,
         "producto_idproducto" : product.idproducto,
-        "estado" : check_state(estado),
         "usuario_idusuario" : usuario_idusario
     }
     offer =dbConnect.add_offer_type_sell_by_client(offer["precio"], offer["producto_idproducto"], offer["usuario_idusario"])
@@ -76,9 +71,9 @@ def check_category(categoria: str):
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
                             detail="You can only post an product with those categories (electrónica ,moda, hogar,salud,entretenimiento,deportes, transporte, mascotas,arte, literatura)")
 def check_state(estado : str):
-    estados = ["Pendiente Cliente","Pendiente Tienda","Rechazada","en curso", "finalizada"]
+    estados = ["pendiente_cliente","pendiente_tienda","rechazada","en_curso", "finalizada"]
     if estado.lower() in estados:
         return estado.lower().capitalize()
     else:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-                            detail="You can only post an product with those states (pendienteCliente,pendienteTienda,rechazada,en curso, finalizada)")
+                            detail="You can only post an product with those states (pendiente_cliente,pendiente_tienda,rechazada,en_curso, finalizada)")

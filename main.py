@@ -3,6 +3,7 @@ from routers.user import userRouter
 from routers.product import productRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from routers.offer import offerRouter
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -13,6 +14,7 @@ app.add_middleware(
 )
 app.include_router(userRouter)
 app.include_router(productRouter)
+app.include_router(offerRouter)
 
 
 app.mount("/static", StaticFiles(directory="static"), name = "static")
