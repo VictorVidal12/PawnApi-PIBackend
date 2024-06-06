@@ -217,7 +217,7 @@ class ConnectionDB:
     def add_offer_type_sell_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`oferta` VALUES ('venta',%s,'Pendiente Tienda',%s,%s);"
+                query = "INSERT INTO `mydb`.`oferta` VALUES ('venta',%s, %s,'pendiente_tienda',%s);"
                 variables = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query, variables)
                 query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
