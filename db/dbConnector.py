@@ -560,7 +560,7 @@ class ConnectionDB:
     #HU: Obtener las ventas de un usuario
     def get_sells_by_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
-            query = "SELECT * FROM venta WHERE usuario_idusuario = %s"
+            query = "SELECT * FROM venta WHERE usuario_idusuario = %s;"
             variables = (idusuario,)
             sells = self.executeSQL(query, variables)
             return sells
