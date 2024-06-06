@@ -34,19 +34,15 @@ async def user(user: User):
     print(user_dict)
     return JSONResponse(content=user_dict)
 
-@userRouter.delete("/{email}", status_code= status.HTTP_200_OK)
-async def user(email : str):
-    user = dbConnect.get_user_by_email(email)
-    user_dict = user
-    dbConnect.delete_user(email)
-    return JSONResponse(content=user_dict)
 @userRouter.put("/",status_code= status.HTTP_200_OK, response_model=User)
 async def user(user: User):
     user.tipo = correctType(user.tipo)
+    user.genero = correctGenre(correctGenre(user.genero))
     user_dict = dict(user)
     del user_dict["idusuario"]
     dbConnect.update_user(user.correo_electronico, user_dict["nombre"], user_dict["contrasennia"], user_dict["tipo"])
     user_dict = dbConnect.get_user_by_email(user.correo_electronico)
+    user_dict["nacimiento"] = str(user_dict["nacimiento"])
     return JSONResponse(content=user_dict)
 def correctType(word: str):
     word_lower = word.lower()
