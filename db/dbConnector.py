@@ -196,6 +196,18 @@ class ConnectionDB:
             return False
 
     #OFERTA
+
+    def get_peding_offer_by_userid(self, idusuario: int):
+        if self.exists_iduser(idusuario):
+            query = "SELECT * FROM oferta WHERE estado = 'pendiente_tienda' AND idusuario = %s;"
+            peding_offers = self.executeSQL(query, (idusuario,))
+            if len(peding_offers) > 0:
+                return peding_offers
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offers in peding state was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+
     # El cliente crea la oferta
     # HU: Crear oferta de empeño(cliente)
     def add_offer_type_pawn_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
