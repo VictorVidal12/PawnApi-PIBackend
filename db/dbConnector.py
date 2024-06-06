@@ -201,12 +201,9 @@ class ConnectionDB:
     def add_offer_type_pawn_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query_1 = "INSERT INTO `mydb`.`oferta` VALUES ('empennio',%s,'Pendiente Tienda',%s,%s);"
-                variables_1 = (precio, producto_idproducto, usuario_idusuario,)
-                self.executeSQL(query_1, variables_1)
-                query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
-                element = self.executeSQL(query_2)
-                return element
+                query = "INSERT INTO `mydb`.`oferta` VALUES ('empennio',%s,'Pendiente Tienda',%s,%s);"
+                variables = (precio, producto_idproducto, usuario_idusuario,)
+                self.executeSQL(query, variables)
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
@@ -220,9 +217,6 @@ class ConnectionDB:
                 query = "INSERT INTO `mydb`.`oferta` VALUES ('venta',%s,'Pendiente Tienda',%s,%s);"
                 variables = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query, variables)
-                query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
-                element = self.executeSQL(query_2)
-                return element
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
@@ -238,7 +232,6 @@ class ConnectionDB:
                             "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `usuario_idusuario` = %s;"
                     variables = (contra_oferta, idoferta, producto_idproducto, usuario_idusuario,)
                     self.executeSQL(query, variables)
-
                 else:
                     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                         detail="Product with this id was not found")
