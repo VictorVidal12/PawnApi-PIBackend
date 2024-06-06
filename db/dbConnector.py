@@ -81,6 +81,14 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email was not found")
 
+    def get_user_by_id(self, idusuario: int):
+        query = "SELECT * FROM USUARIO u WHERE u.idusuario = %s;"
+        user = self.executeSQL(query, (idusuario,))
+        if len(user) > 0:
+            return user[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email was not found")
+
     def add_user(self, nombre: str, correo_electronico: str, contrasennia: str, tipo: str
                  , genero: str, nacimiento: str, telefono: str):
         if self.user_with_this_email_exist(correo_electronico):
