@@ -201,7 +201,7 @@ class ConnectionDB:
     def add_offer_type_pawn_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query_1 = "INSERT INTO `mydb`.`oferta` VALUES ('empennio',%s,'Pendiente Tienda',%s,%s);"
+                query_1 = "INSERT INTO `mydb`.`oferta` VALUES ('empennio',%s,'pendiente_tienda',%s,%s);"
                 variables_1 = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query_1, variables_1)
                 query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
@@ -217,7 +217,7 @@ class ConnectionDB:
     def add_offer_type_sell_by_client(self, precio: str, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`oferta` VALUES ('venta',%s,'Pendiente Tienda',%s,%s);"
+                query = "INSERT INTO `mydb`.`oferta` VALUES ('venta',%s,'pendiente_tienda',%s,%s);"
                 variables = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query, variables)
                 query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
@@ -234,7 +234,7 @@ class ConnectionDB:
         if self.exists_idoffer(idoferta):
             if self.exists_client_type_user_with_this_id(usuario_idusuario):
                 if self.exists_idproduct(producto_idproducto):
-                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'Pendiente Tienda' " \
+                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'pendiente_tienda' " \
                             "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `usuario_idusuario` = %s;"
                     variables = (contra_oferta, idoferta, producto_idproducto, usuario_idusuario,)
                     self.executeSQL(query, variables)
@@ -255,7 +255,7 @@ class ConnectionDB:
         if self.exists_idoffer(idoferta):
             if self.exists_shop_type_user_with_this_id(usuario_idusuario):
                 if self.exists_idproduct(producto_idproducto):
-                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'Pendiente cliente' " \
+                    query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'pendiente_cliente' " \
                             "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `usuario_idusuario` = %s;"
                     variables = (contra_oferta, idoferta, producto_idproducto, usuario_idusuario,)
                     self.executeSQL(query, variables)
@@ -360,11 +360,14 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
 
+    def get_buys_by_id_shop(self, idcompra: int):
+        pass
+
     def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha):
-                    query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`) " \
+                    query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`) "\
                             "VALUES (%s,%s,%s,%s);"
                     variables = (precio, fecha, usuario_idusuario, producto_idproducto)
                     self.executeSQL(query, variables)
@@ -441,7 +444,10 @@ class ConnectionDB:
     def get_buys(self):
         query = "SELECT * FROM COMPRA;"
         buys = self.executeSQL(query)
-        return buys
+        if len(buys) > 0:
+            return buys
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buys was not found")
 
     #SELL
     def get_sell_by_id(self, idventa: int):
@@ -476,17 +482,6 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="User with this id was not found in shop type users")
-
-    # HU: Obtener productos que la tienda está vendiendo (sin id)
-    def get_shop_sells(self):
-        query = "SELECT * FROM venta v INNER JOIN producto p ON p.usuario_idusuario = v.usuario_idusuario" \
-                "INNER JOIN usuario u ON v.usuario_idusuario = u.idusuario WHERE u.tipo = 'tienda';"
-        sells = self.executeSQL(query)
-        if len(sells) > 0:
-            return sells
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Sells with this type of user was not found")
 
     def get_sells_with_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
