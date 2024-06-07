@@ -640,19 +640,16 @@ class ConnectionDB:
         else:
             return False
 
-    #HU: Obtener las ofertas de empeño desde el punto de vista de la tienda
-    def get_pawn_offers_by_shop(self):
-        idshop = 8
-        if self.exists_offers_with_userid(idshop):
-            query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND tipo = 'empennio';"
-            pawns = self.executeSQL(query, (idshop,))
-            if len(pawns) > 0:
-                return pawns
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail="Offers by shop whit this type was not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Offers by shop was not found")
+    #HU: Obtener las ofertas de empeño con estado pendiente_tienda
+    def get_pawn_offers_with_peding_shop_state(self):
+        query = "SELECT * FROM oferta WHERE estado = 'pendiente_tienda' AND tipo = 'empennio';"
+        pawns = self.executeSQL(query)
+        if len(pawns) > 0:
+            return pawns
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers wwith this state and type was not found")
+
 
         #PAWN
 
