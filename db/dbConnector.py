@@ -634,6 +634,39 @@ class ConnectionDB:
 
     #PAWN
 
+    def exists_pawn_with_userid(self, idusuario: int):
+        query = "SELECT * FROM empennio WHERE usuario_idusuario = %s;"
+        pawns = self.executeSQL(query, (idusuario,))
+        if len(pawns) > 0:
+            return True
+        else:
+            return False
+
+    # HU: Obtener mis empeños vigentes
+    def get_currents_pawns_by_userid(self, idusuario: int):
+        if self.exists_pawn_with_userid(idusuario):
+            query = "SELECT * FROM empennio WHERE usuario_idusuario = %s AND estado = 'en_curso';"
+            pawns = self.executeSQL(query, (idusuario,))
+            if len(pawns) > 0:
+                return pawns
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Pawns with this user id and this state was not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns with this user id was not found")
+
+    # HU: Obtener los empeños vigentes de la tienda
+    def get_currents_pawns_by_shop(self):
+        idshop = 8
+        if self.exists_pawn_with_userid(idshop):
+            query = "SELECT * FROM empennio WHERE usuario_idusuario = %s AND estado = 'en_curso';"
+            pawns = self.executeSQL(query, (idshop,))
+            if len(pawns) > 0:
+                return pawns
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Pawns by shop with this state was not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns by shop was not found")
+
     def exists_idpawn(self, idempennio):
         query = "SELECT * FROM empennio WHERE idempennio = %s;"
         pawns = self.executeSQL(query, (idempennio,))
