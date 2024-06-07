@@ -7,4 +7,7 @@ class Offer(BaseModel):
     precio: int
     producto_idproducto : int
     estado: str
-    usuario_idusuario: int
+    ofertante: int
+    aceptante : int | None
+
+

@@ -29,9 +29,9 @@ async def offer(nombre, descripcion, categoria, precio : int, id_usuario : int,i
     offer = {
         "precio" : precio,
         "producto_idproducto" : product["idproducto"],
-        "usuario_idusuario" : id_usuario
+        "ofertante" : id_usuario
     }
-    offer =dbConnect.add_offer_type_pawn_by_client(offer["precio"], offer["producto_idproducto"], offer["usuario_idusuario"])
+    offer =dbConnect.add_offer_type_pawn_by_client(offer["precio"], offer["producto_idproducto"], offer["ofertante"])
     return JSONResponse(content=offer, status_code=status.HTTP_201_CREATED)
 
 @offerRouter.post("/MakeSellByClient", status_code= status.HTTP_201_CREATED, response_model=Offer)
@@ -50,9 +50,9 @@ async def offer(nombre, descripcion, categoria, precio : int, id_usuario: int,im
     offer = {
         "precio" : precio,
         "producto_idproducto" : product["idproducto"],
-        "usuario_idusuario" : id_usuario
+        "ofertante" : id_usuario
     }
-    offer =dbConnect.add_offer_type_sell_by_client(offer["precio"], offer["producto_idproducto"], offer["usuario_idusuario"])
+    offer =dbConnect.add_offer_type_sell_by_client(offer["precio"], offer["producto_idproducto"], offer["ofertante"])
     return JSONResponse(content=offer, status_code=status.HTTP_201_CREATED)
 
 def delete_image(image_path: str):

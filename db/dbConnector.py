@@ -214,7 +214,7 @@ class ConnectionDB:
     def add_offer_type_pawn_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario)" \
+                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, ofertante)" \
                           " VALUES ('empennio', %s, %s, 'pendiente_tienda', %s);"
                 variables_1 = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query_1, variables_1)
@@ -237,19 +237,17 @@ class ConnectionDB:
     def add_offer_type_sell_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, usuario_idusuario)" \
+                query_1 = "INSERT INTO `mydb`.`oferta` (tipo, precio, producto_idproducto, estado, ofertante)" \
                           " VALUES ('venta', %s, %s, 'pendiente_tienda', %s);"
                 variables_1 = (precio, producto_idproducto, usuario_idusuario,)
                 self.executeSQL(query_1, variables_1)
                 query_2 = "SELECT * FROM oferta ORDER BY idoferta DESC LIMIT 1;"
                 element = self.executeSQL(query_2)
-                return element
+                return element[0]
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
-
-
 
     # HU: Actualizar oferta para contraofertar el precio (cliente)
     def update_offer_with_counteroffer_client(self, contra_oferta: int, idoferta: int, usuario_idusuario: int,
@@ -319,6 +317,7 @@ class ConnectionDB:
         else:
             return False
 
+    #CREATE OFFER (Falta Probar)
 
     #HU: Obtener ofertas de compra en proceso de la tienda
     def get_buy_offers_by_shop_process_state(self):
@@ -344,13 +343,14 @@ class ConnectionDB:
 
     # HU: Obtener ofertas de empeño en proceso de la tienda
     def get_pawns_offers_by_shop_process_state(self):
-        query = "SELECT * FROM oferta WHERE  estado = 'en_curso' AND tipo = 'empennio';"
-        pawns = self.executeSQL(query)
+        idtienda = 8
+        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND estado = 'en_curso' AND tipo = 'empennio';"
+        pawns = self.executeSQL(query, (idtienda,))
         if len(pawns) > 0:
             return pawns
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns with this state and type was not found")
+                                detail="Pawns by shop with this state was not found")
 
     #HU: Obtener ofertas de venta en proceso de la tienda
     def get_sells_offers_by_shop_process_state(self):
@@ -640,16 +640,19 @@ class ConnectionDB:
         else:
             return False
 
-    #HU: Obtener las ofertas de empeño con estado pendiente_tienda
-    def get_pawn_offers_with_peding_shop_state(self):
-        query = "SELECT * FROM oferta WHERE estado = 'pendiente_tienda' AND tipo = 'empennio';"
-        pawns = self.executeSQL(query)
-        if len(pawns) > 0:
-            return pawns
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Offers wwith this state and type was not found")
-
+    #HU: Obtener las ofertas de empeño desde el punto de vista de la tienda
+    def get_pawn_offers_by_shop(self):
+        idshop = 8
+        if self.exists_offers_with_userid(idshop):
+            query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND tipo = 'empennio';"
+            pawns = self.executeSQL(query, (idshop,))
+            if len(pawns) > 0:
+                return pawns
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers by shop whit this type was not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Offers by shop was not found")
 
         #PAWN
 
@@ -675,14 +678,16 @@ class ConnectionDB:
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
-        query = "SELECT * FROM empennio WHERE  estado = 'en_curso';"
-        pawns = self.executeSQL(query)
-        if len(pawns) > 0:
-            return pawns
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns in this state was not found")
-
+        idshop = 8
+        if self.exists_pawn_with_userid(idshop):
+            query = "SELECT * FROM empennio WHERE usuario_idusuario = %s AND estado = 'en_curso';"
+            pawns = self.executeSQL(query, (idshop,))
+            if len(pawns) > 0:
+                return pawns
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Pawns by shop with this state was not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns by shop was not found")
 
     def exists_idpawn(self, idempennio):
         query = "SELECT * FROM empennio WHERE idempennio = %s;"
@@ -733,7 +738,7 @@ class ConnectionDB:
             self.executeSQL(query, variables)
 
     #UPDATE PAWN (falta probar)
-    def update_pawn(self, n_precio: int, n_estado: str, n_fecha_inicio: str, n_fecha_final: str, n_interes: int,
+    def update_pawn(self, n_precio: int, n_estado: str, n_fecha_inicio: str, n_fecha_final: str, n_interes: str,
                     n_usuario_idusuario: int, n_producto_idproducto: int, idempennio: int, usuario_idusuario: int,
                     producto_idproducto: int):
         if not self.exists_idpawn(idempennio):
