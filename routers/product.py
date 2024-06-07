@@ -18,20 +18,6 @@ async def get_product(idproducto : str):
     product_dict = product
     return JSONResponse(content=product_dict, status_code=status.HTTP_200_OK)
 
-@productRouter.post("/", status_code= status.HTTP_201_CREATED)
-async def product(nombre, descripcion, categoria, image: UploadFile = File(...)):
-    categoria = check_category(categoria)
-    img_dir = await upload_img(absolute_imagedir, image)
-    dict_product = {
-        "imagen" : str(img_dir),
-        "nombre" : nombre,
-        "descripcion" : descripcion,
-        "categoria" : categoria
-    }
-    dbConnect.add_product(dict_product["imagen"],dict_product["nombre"], dict_product["descripcion"], dict_product["categoria"] )
-    product = dbConnect.get_product_by_image(img_dir)
-    return JSONResponse(content=product, status_code=status.HTTP_201_CREATED)
-
 @productRouter.put("/", status_code= status.HTTP_200_OK, response_model = Product)
 async def product_strings(id :int,nombre :str, descripcion :str, categoria :str):
     categoria = check_category(categoria)

@@ -75,7 +75,7 @@ class ConnectionDB:
         if len(user) > 0:
             return user[0]
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email was not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
     def add_user(self, nombre: str, correo_electronico: str, contrasennia: str, tipo: str
                  , genero: str, nacimiento: str, telefono: str):
@@ -678,16 +678,13 @@ class ConnectionDB:
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
-        idshop = 8
-        if self.exists_pawn_with_userid(idshop):
-            query = "SELECT * FROM empennio WHERE usuario_idusuario = %s AND estado = 'en_curso';"
-            pawns = self.executeSQL(query, (idshop,))
-            if len(pawns) > 0:
-                return pawns
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        query = "SELECT * FROM empennio WHERE  estado = 'en_curso';"
+        pawns = self.executeSQL(query, (idshop,))
+        if len(pawns) > 0:
+            return pawns
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail="Pawns by shop with this state was not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns by shop was not found")
 
     def exists_idpawn(self, idempennio):
         query = "SELECT * FROM empennio WHERE idempennio = %s;"
