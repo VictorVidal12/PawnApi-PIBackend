@@ -249,6 +249,8 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
+
+
     # HU: Actualizar oferta para contraofertar el precio (cliente)
     def update_offer_with_counteroffer_client(self, contra_oferta: int, idoferta: int, usuario_idusuario: int,
                                               producto_idproducto: int):
