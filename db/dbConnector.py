@@ -317,7 +317,6 @@ class ConnectionDB:
         else:
             return False
 
-    #CREATE OFFER (Falta Probar)
 
     #HU: Obtener ofertas de compra en proceso de la tienda
     def get_buy_offers_by_shop_process_state(self):
@@ -343,14 +342,13 @@ class ConnectionDB:
 
     # HU: Obtener ofertas de empeño en proceso de la tienda
     def get_pawns_offers_by_shop_process_state(self):
-        idtienda = 8
-        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND estado = 'en_curso' AND tipo = 'empennio';"
-        pawns = self.executeSQL(query, (idtienda,))
+        query = "SELECT * FROM oferta WHERE  estado = 'en_curso' AND tipo = 'empennio';"
+        pawns = self.executeSQL(query)
         if len(pawns) > 0:
             return pawns
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns by shop with this state was not found")
+                                detail="Pawns with this state and type was not found")
 
     #HU: Obtener ofertas de venta en proceso de la tienda
     def get_sells_offers_by_shop_process_state(self):
