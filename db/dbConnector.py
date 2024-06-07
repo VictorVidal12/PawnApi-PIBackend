@@ -678,16 +678,14 @@ class ConnectionDB:
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
-        idshop = 8
-        if self.exists_pawn_with_userid(idshop):
-            query = "SELECT * FROM empennio WHERE usuario_idusuario = %s AND estado = 'en_curso';"
-            pawns = self.executeSQL(query, (idshop,))
-            if len(pawns) > 0:
-                return pawns
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail="Pawns by shop with this state was not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns by shop was not found")
+        query = "SELECT * FROM empennio WHERE  estado = 'en_curso';"
+        pawns = self.executeSQL(query)
+        if len(pawns) > 0:
+            return pawns
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns in this state was not found")
+
 
     def exists_idpawn(self, idempennio):
         query = "SELECT * FROM empennio WHERE idempennio = %s;"
@@ -738,7 +736,7 @@ class ConnectionDB:
             self.executeSQL(query, variables)
 
     #UPDATE PAWN (falta probar)
-    def update_pawn(self, n_precio: int, n_estado: str, n_fecha_inicio: str, n_fecha_final: str, n_interes: str,
+    def update_pawn(self, n_precio: int, n_estado: str, n_fecha_inicio: str, n_fecha_final: str, n_interes: int,
                     n_usuario_idusuario: int, n_producto_idproducto: int, idempennio: int, usuario_idusuario: int,
                     producto_idproducto: int):
         if not self.exists_idpawn(idempennio):
