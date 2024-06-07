@@ -632,7 +632,29 @@ class ConnectionDB:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail="User with old id or user with new id was not found")
 
-    #PAWN
+    def exists_offers_with_userid(self, idusuario: int):
+        query = "SELECT * FROM oferta WHERE usuario_idusuario = %s;"
+        offers = self.executeSQL(query, (idusuario,))
+        if len(offers) > 0:
+            return True
+        else:
+            return False
+
+    #HU: Obtener las ofertas de empeño desde el punto de vista de la tienda
+    def get_pawn_offers_by_shop(self):
+        idshop = 8
+        if self.exists_offers_with_userid(idshop):
+            query = "SELECT * FROM oferta WHERE usuario_idusuario = %s AND tipo = 'empennio';"
+            pawns = self.executeSQL(query, (idshop,))
+            if len(pawns) > 0:
+                return pawns
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers by shop whit this type was not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Offers by shop was not found")
+
+        #PAWN
 
     def exists_pawn_with_userid(self, idusuario: int):
         query = "SELECT * FROM empennio WHERE usuario_idusuario = %s;"
