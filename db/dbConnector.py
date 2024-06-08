@@ -463,26 +463,7 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
 
-    def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int,
-                facturacompraventa_idFacturaCompra: int):
-        if self.exists_iduser(usuario_idusuario):
-            if self.exists_idproduct(producto_idproducto):
-                if self.check_date(fecha):
-                    query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`,"\
-                            "`facturacompraventa_idFacturaCompra` ) VALUES (%s,%s,%s,%s,%s);"
-                    variables = (precio, fecha, usuario_idusuario, producto_idproducto,
-                                 facturacompraventa_idFacturaCompra)
-                    self.executeSQL(query, variables)
-                    query_2 = "SELECT * FROM compra ORDER BY idcompra DESC LIMIT 1;"
-                    element = self.executeSQL(query_2)
-                    return element
-                else:
-                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                        detail="Date entered incorrectly (Y-m-d)")
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+
 
     def buy_with_this_id_exist(self, idcompra: int):
         query = "SELECT * FROM COMPRA c WHERE c.idcompra = %s;"
@@ -591,7 +572,7 @@ class ConnectionDB:
             sells = self.executeSQL(query, variables)
             return sells
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+            return []
 
     def exists_idsell(self, idventa):
         query = "SELECT * FROM venta WHERE idventa = %s;"
@@ -603,17 +584,18 @@ class ConnectionDB:
             return False
 
     #CREATE SELL (falta probar)
-    def add_sell(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int):
+    def add_sell(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int, id_factura_compraventa: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha):
-                    query = "INSERT INTO `mydb`.`VENTA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`) " \
-                            "VALUES (%s,%s,%s,%s);"
-                    variables = (precio, fecha, usuario_idusuario, producto_idproducto)
+                    self.get_bill_buy_sell_by_id(id_factura_compraventa)
+                    query = "INSERT INTO `mydb`.`VENTA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`, `facturacompraventa_idFacturaCompra`) " \
+                            "VALUES (%s,%s,%s,%s, %s);"
+                    variables = (precio, fecha, usuario_idusuario, producto_idproducto,id_factura_compraventa)
                     self.executeSQL(query, variables)
                     query_2 = "SELECT * FROM venta ORDER BY idventa DESC LIMIT 1;"
                     element = self.executeSQL(query_2)
-                    return element
+                    return element[0]
                 else:
                     raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                         detail="Date entered incorrectly (Y-m-d)")
@@ -622,6 +604,25 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
+    def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int, id_factura_compraventa: int):
+        if self.exists_iduser(usuario_idusuario):
+            if self.exists_idproduct(producto_idproducto):
+                if self.check_date(fecha):
+                    self.get_bill_buy_sell_by_id(id_factura_compraventa)
+                    query = "INSERT INTO `mydb`.`compra` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`, `facturacompraventa_idFacturaCompra`) " \
+                            "VALUES (%s,%s,%s,%s, %s);"
+                    variables = (precio, fecha, usuario_idusuario, producto_idproducto,id_factura_compraventa)
+                    self.executeSQL(query, variables)
+                    query_2 = "SELECT * FROM compra ORDER BY idcompra DESC LIMIT 1;"
+                    element = self.executeSQL(query_2)
+                    return element[0]
+                else:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                        detail="Date entered incorrectly (Y-m-d)")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
     #DELETE SELL (sin probar)
     def delete_sell(self, idventa: int):
         if not self.exists_idsell(idventa):
@@ -697,10 +698,8 @@ class ConnectionDB:
             pawns = self.executeSQL(query, (idusuario,))
             if len(pawns) > 0:
                 return pawns
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail="Pawns with this user id and this state was not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns with this user id was not found")
+        else:
+            return []
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
@@ -729,19 +728,19 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawn with this id was not found")
 
     #CREATE PAWN (falta probar)
-    def add_pawn(self, precio: int, estado: str, fecha_inicio: str, fecha_final: str,
-                 interes: int, usuario_idusuario: int, producto_idproducto: int):
+    def add_pawn(self, precio: int, fecha_inicio: str, fecha_final: str, usuario_idusuario: int, producto_idproducto: int, factura_empennio : int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha_inicio) and self.check_date(fecha_final):
+                    self.get_bill_pawn_by_id(factura_empennio)
                     query = "INSERT INTO `mydb`.`EMPENNIO` (`precio`,`estado`, `fecha_inicio`, `fecha_final`," \
-                            " `interes`, `usuario_idusuario`, `producto_idproducto`) VALUES (%s,%s,%s,%s,%s,%s,%s);"
-                    variables = (precio, estado, fecha_inicio, fecha_final, interes, usuario_idusuario,
-                                 producto_idproducto)
+                            " `interes`, `usuario_idusuario`, `producto_idproducto`, `facturaempennio_idFacturaEmpennio`) VALUES (%s,%s,%s,%s,%s,%s,%s, %s);"
+                    variables = (precio, "en_curso", fecha_inicio, fecha_final, 5, usuario_idusuario,
+                                 producto_idproducto, factura_empennio)
                     self.executeSQL(query, variables)
                     query_2 = "SELECT * FROM empennio ORDER BY idempennio DESC LIMIT 1;"
                     element = self.executeSQL(query_2)
-                    return element
+                    return element[0]
                 else:
                     raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                         detail="Initial date or final date entered incorrectly (Y-m-d)")
@@ -791,33 +790,55 @@ class ConnectionDB:
     #Bill_buy_sell
     def add_bill_buy_sell(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
                           departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
-                          precio_IVA: int, info_adicional: str, usuario_idusuario: int):
-        if self.exists_iduser(usuario_idusuario):
-            query = "INSERT INTO `mydb`.`FACTURA_COMPRA` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
-                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional`," \
-                    " `usuario_idusuario`)VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                          precio_IVA: int, info_adicional: str):
+            query = "INSERT INTO `mydb`.`facturacompraventa` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
             variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
-                         precio_envio, precio_IVA, info_adicional, usuario_idusuario)
+                         precio_envio, precio_IVA, info_adicional)
             self.executeSQL(query, variables)
-            query_2 = "SELECT * FROM factura_compra ORDER BY idFacturaCompra DESC LIMIT 1;"
+            query_2 = "SELECT * FROM facturacompraventa ORDER BY idFacturaCompra DESC LIMIT 1;"
+            element = self.executeSQL(query_2)
+            return element[0]
+    def get_bill_buy_sell_by_id(self,idBill : int):
+        query = "SELECT * FROM facturacompraventa WHERE idFacturaCompra = %s;"
+        variables = (idBill,)
+        element = self.executeSQL(query, variables)
+        if len(element) > 0:
+            return element[0]
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bill with this id was not found")
+
+    def get_bill_pawn_by_id(self,idBill: int):
+        query = "SELECT * FROM facturaempennio WHERE idFacturaEmpennio = %s;"
+        variables = (idBill,)
+        element = self.executeSQL(query, variables)
+        if len(element) > 0:
+            return element[0]
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bill with this id was not found")
+
+    def add_bill_pawn(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
+                          departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
+                          precio_IVA: int, info_adicional: str):
+            query = "INSERT INTO `mydb`.`facturaempennio` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+            variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                         precio_envio, precio_IVA, info_adicional)
+            self.executeSQL(query, variables)
+            query_2 = "SELECT * FROM facturaempennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
             element = self.executeSQL(query_2)
             return element[0]
 
-    def add_bill_pawn(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
-                      departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
-                      precio_IVA: int, info_adicional: str, usuario_idusuario: int, producto_idproducto: int):
-        if self.exists_iduser(usuario_idusuario):
-            if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`FACTURA_EMPENNIO` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
-                        " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional`," \
-                        " `usuario_idusuario`, `producto_idproducto`)VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-                variables = (
-                    medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
-                    precio_envio, precio_IVA, info_adicional, usuario_idusuario, producto_idproducto)
-                self.executeSQL(query, variables)
-                query_2 = "SELECT * FROM factura_empennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
-                element = self.executeSQL(query_2)
-                return element[0]
+    def add_bill_pay_pawn(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
+                          departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
+                          precio_IVA: int, info_adicional: str):
+            query = "INSERT INTO `mydb`.`facturapagoempennio` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+            variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                         precio_envio, precio_IVA, info_adicional)
+            self.executeSQL(query, variables)
+            query_2 = "SELECT * FROM facturapagoempennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
+            element = self.executeSQL(query_2)
+            return element[0]
+
 
     @staticmethod
     def check_date(date: str) -> bool:

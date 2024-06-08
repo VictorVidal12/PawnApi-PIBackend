@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from routers.offer import offerRouter
 from routers.sell import sellRouter
 from routers.pawn import pawnRouter
+from routers.bill import billRouter
 
 app = FastAPI()
 app.add_middleware(
@@ -22,6 +23,7 @@ app.include_router(offerRouter)
 app.include_router(buyRouter)
 app.include_router(sellRouter)
 app.include_router(pawnRouter)
+app.include_router(billRouter)
 
 
 app.mount("/static", StaticFiles(directory="static"), name = "static")

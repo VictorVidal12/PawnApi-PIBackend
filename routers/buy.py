@@ -19,7 +19,7 @@ async def get_user_shopping(user_id : int):
     return JSONResponse(content=shopping, status_code=status.HTTP_200_OK)
 @buyRouter.post("/", status_code= status.HTTP_201_CREATED,response_model=Buy)
 async def add_buy(buy: Buy):
-    purchase = dbConnect.add_buy(buy.precio, buy.fecha, buy.usuario_idusuario, buy.producto_idproducto)[0]
+    purchase = dbConnect.add_buy(buy.precio, buy.fecha, buy.usuario_idusuario, buy.producto_idproducto, buy.id_factura_compraventa)
     purchase["fecha"] = str(purchase["fecha"])
     if purchase:
         return JSONResponse(content=purchase, status_code=status.HTTP_201_CREATED)

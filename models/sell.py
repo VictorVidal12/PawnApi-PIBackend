@@ -7,3 +7,5 @@ class Sell(BaseModel):
     fecha: str
     usuario_idusuario: int
     producto_idproducto: int
+    id_factura_compraventa : int
+
