@@ -342,16 +342,6 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offers by shop with this type was not found")
 
-    #HU: Obtener ofertas de compra en proceso de la tienda
-    def get_buy_offers_by_shop_process_state(self):
-        idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'compra';"
-        buys = self.executeSQL(query, (idtienda,))
-        if len(buys) > 0:
-            return buys
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Buys by shop with this state was not found")
 
     #HU: Obtener ofertas de compra en proceso de la tienda
     def get_buys_offers_by_shop_process_state(self):
@@ -364,44 +354,72 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Buys by shop with this state was not found")
 
-    # HU: Obtener ofertas de empeño en proceso de la tienda
-    def get_pawns_offers_by_shop_process_state(self):
-        idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'empennio';"
-        pawns = self.executeSQL(query, (idtienda,))
+    # HU: Obtener ofertas de tipo empennio en estado en_curso de la tienda
+    def get_pawns_offers_in_process_state(self):
+        query = "SELECT * FROM oferta WHERE estado = 'en_curso' AND tipo = 'empennio';"
+        pawns = self.executeSQL(query)
         if len(pawns) > 0:
             return pawns
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns by shop with this state was not found")
+                                detail="Pawns offers with this state was not found")
 
     #HU: Obtener ofertas de venta en proceso de la tienda
-    def get_sells_offers_by_shop_process_state(self):
-        idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'venta';"
-        sells = self.executeSQL(query, (idtienda,))
-        if len(sells) > 0:
-            return sells
+    def get_sells_offers_in_process_state(self):
+        query = "SELECT * FROM oferta WHERE estado = 'en_curso' AND tipo = 'venta';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Sells by shop with this state was not found")
+                                detail="Sells with this state was not found")
+
+    #HU: Obtener las ofertas de tipo venta y estado pendiente_tienda
+    def get_sells_offers_in_peding_shop_state(self):
+        query = "SELECT * FROM oferta WHERE estado = 'pendiente_tienda' AND tipo = 'venta';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Sells with this state was not found")
 
     # HU: Obtener ofertas de empeño en pendiente de la tienda
 
-    def get_pawns_offers_by_shop_in_peding_client_state(self):
+    def get_pawns_offers_in_peding_client_state(self):
         idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'pendiente_cliente' AND tipo = 'empennio';"
+        query = "SELECT * FROM oferta WHERE estado = 'pendiente_cliente' AND tipo = 'empennio';"
         pawns = self.executeSQL(query, (idtienda,))
         if len(pawns) > 0:
             return pawns
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns by shop with this state was not found")
+                                detail="Pawns offers by shop with this state was not found")
+
+    # Obtener las ofertas de tipo empeño con estado pendiente_tienda
+    def get_pawn_offers_with_peding_shop_state(self):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado = 'pendiente_tienda';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns offers with this state was not found")
+
+    # Obtener las ofertas de tipo empeño de un cliente con estado pendiente_tienda
+    def get_pawn_offers_with_peding_shop_state_by_userid(self, userid):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado = 'pendiente_tienda' AND ofertante = %s;"
+        offers = self.executeSQL(query, (userid,))
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns offers with this state and user id was not found")
 
     def add_offer(self, tipo: str, precio: str, producto_idproducto: int, estado: str, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`oferta` (`tipo`,`precio`,`producto_idproducto`,`estado`,`ofertante`)"\
+                query = "INSERT INTO `mydb`.`oferta` (`tipo`,`precio`,`producto_idproducto`,`estado`,`ofertante`)" \
                         " VALUES (%s,%s, %s,%s,%s);"
                 variables = (tipo, precio, producto_idproducto, estado, usuario_idusuario,)
                 self.executeSQL(query, variables)
@@ -464,6 +482,26 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
 
 
+    def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int,
+                facturacompraventa_idFacturaCompra: int):
+        if self.exists_iduser(usuario_idusuario):
+            if self.exists_idproduct(producto_idproducto):
+                if self.check_date(fecha):
+                    query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`," \
+                            "`facturacompraventa_idFacturaCompra` ) VALUES (%s,%s,%s,%s,%s);"
+                    variables = (precio, fecha, usuario_idusuario, producto_idproducto,
+                                 facturacompraventa_idFacturaCompra)
+                    self.executeSQL(query, variables)
+                    query_2 = "SELECT * FROM compra ORDER BY idcompra DESC LIMIT 1;"
+                    element = self.executeSQL(query_2)
+                    return element
+                else:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                        detail="Date entered incorrectly (Y-m-d)")
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
     def buy_with_this_id_exist(self, idcompra: int):
         query = "SELECT * FROM COMPRA c WHERE c.idcompra = %s;"
@@ -547,6 +585,29 @@ class ConnectionDB:
         else:
             return False
 
+    def exists_offers_pawn_type_with_userid(self, userid: int):
+        query = "SELECT * FROM oferta WHERE ofertante = %s AND tipo = 'empennio';"
+        offers = self.executeSQL(query, (userid,))
+        if len(offers) > 0:
+            return True
+        else:
+            return False
+
+    # HU: Obtener mis solicitudes de empeño vigentes
+    def get_peding_pawns_offers_by_userid(self, userid):
+        if self.exists_offers_pawn_type_with_userid(userid):
+            query = "SELECT * FROM oferta WHERE ofertante = %s AND tipo = 'empennio' AND (estado = 'pendiente_cliente'"\
+                    " OR estado = 'pendiente_tienda');"
+            offers = self.executeSQL(query, (userid,))
+            if len(offers) > 0:
+                return offers
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers with this user id was not found in this offers states")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this user id was not found in pawns type offers")
+
     # HU: Obtener las ofertas de tipo venta , en estado pendiente_cliente  de la tienda
     def get_sells_offers_in_client_peding_state(self):
         idusuario = 8
@@ -564,6 +625,48 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="User with this id was not found in shop type users")
 
+    #HU: Obtener todas las ofertas de empeño menos las finalizadas
+    def get_all_pawn_peding_offers_without_finalized(self):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado != 'finalizada';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type and states was not found")
+
+    #HU: Obtener todas las ofertas de empeño
+    def get_all_pawn_peding_offers(self):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type was not found")
+
+    #HU: Obtener todas las ofertas de empeño menos las finalizadas de un cliente
+    def get_all_pawn_peding_offers_without_finalized_by_userid(self, userid):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado != 'finalizada' AND ofertante = %s;"
+        offers = self.executeSQL(query, (userid,))
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type, states and user id was not found")
+
+    #HU: Obtener todas las ofertas de empeño de un cliente
+    def get_all_pawn_peding_offers_by_userid(self, userid):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND ofertante = %s;"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type and userid was not found")
+
+
+
     #HU: Obtener las ventas de un usuario
     def get_sells_by_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
@@ -572,7 +675,7 @@ class ConnectionDB:
             sells = self.executeSQL(query, variables)
             return sells
         else:
-            return []
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
     def exists_idsell(self, idventa):
         query = "SELECT * FROM venta WHERE idventa = %s;"
@@ -623,6 +726,7 @@ class ConnectionDB:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+
     #DELETE SELL (sin probar)
     def delete_sell(self, idventa: int):
         if not self.exists_idsell(idventa):
@@ -683,6 +787,15 @@ class ConnectionDB:
 
         #PAWN
 
+    #HU: Actualizar estado de un empeño de un cliente a pagado
+    def update_pawn_state_to_paid_by_client(self, userid, pawnid):
+        if self.exists_pawn_with_userid(userid):
+            query = "UPDATE empennio SET  `estado` = 'pagado' WHERE usuario_idusuario = %s AND idempennio = %s;"
+            self.executeSQL(query, (userid, pawnid,))
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns with this user id and this state was not found")
+
     def exists_pawn_with_userid(self, idusuario: int):
         query = "SELECT * FROM empennio WHERE usuario_idusuario = %s;"
         pawns = self.executeSQL(query, (idusuario,))
@@ -698,8 +811,10 @@ class ConnectionDB:
             pawns = self.executeSQL(query, (idusuario,))
             if len(pawns) > 0:
                 return pawns
-        else:
-            return []
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Pawns with this user id and this state was not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns with this user id was not found")
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
@@ -720,7 +835,7 @@ class ConnectionDB:
             return False
 
     def get_pawn_by_id(self, idempennio: int):
-        query = "SELECT * FROM PRESTAMO p WHERE p.idprestamo = %s;"
+        query = "SELECT * FROM empennio WHERE idempennio = %s;"
         pawn = self.executeSQL(query, (idempennio,))
         if len(pawn) > 0:
             return pawn[0]
@@ -728,12 +843,17 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawn with this id was not found")
 
     #CREATE PAWN (falta probar)
-    def add_pawn(self, precio: int, fecha_inicio: str, fecha_final: str, usuario_idusuario: int, producto_idproducto: int, factura_empennio : int):
+    def add_pawn(self, precio: int, estado: str, fecha_inicio: str, fecha_final: str,
+                 interes: int, usuario_idusuario: int, producto_idproducto: int, idfacturaempennio: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha_inicio) and self.check_date(fecha_final):
                     self.get_bill_pawn_by_id(factura_empennio)
                     query = "INSERT INTO `mydb`.`EMPENNIO` (`precio`,`estado`, `fecha_inicio`, `fecha_final`," \
+                            " `interes`, `usuario_idusuario`, `producto_idproducto`,"\
+                            "`facturaempennio_idFacturaEmpennio`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s);"
+                    variables = (precio, estado, fecha_inicio, fecha_final, interes, usuario_idusuario,
+                                 producto_idproducto, idfacturaempennio)
                             " `interes`, `usuario_idusuario`, `producto_idproducto`, `facturaempennio_idFacturaEmpennio`) VALUES (%s,%s,%s,%s,%s,%s,%s, %s);"
                     variables = (precio, "en_curso", fecha_inicio, fecha_final, 5, usuario_idusuario,
                                  producto_idproducto, factura_empennio)
@@ -838,6 +958,82 @@ class ConnectionDB:
             query_2 = "SELECT * FROM facturapagoempennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
             element = self.executeSQL(query_2)
             return element[0]
+
+    def exists_buys_bills_by_userid(self, userid):
+        query = "SELECT f.* FROM facturacompraventa f INNER JOIN compra c" \
+                " ON c.facturacompraventa_idFacturaCompra = f.idFacturaCompra WHERE c.usuario_idusuario = %s;"
+        buys_bills = self.executeSQL(query, (userid,))
+        if len(buys_bills) > 0:
+            return True
+        else:
+            return False
+
+    def exists_buy_sell_bill_by_billid(self, billid):
+        query = "SELECT * FROM facturacompraventa WHERE idFacturaCompra = %s;"
+        bill = self.executeSQL(query, (billid,))
+        if len(bill) > 0:
+            return True
+        else:
+            return False
+
+    def exists_pawns_bills_by_userid(self, userid):
+        query = "SELECT f.* FROM facturaempennio f INNER JOIN empennio e" \
+                " ON e.facturaempennio_idFacturaEmpennio = f.idFacturaEmpennio WHERE e.usuario_idusuario = %s;"
+        pawns_bills = self.executeSQL(query, (userid,))
+        if len(pawns_bills) > 0:
+            return True
+        else:
+            return False
+
+    def exists_pawn_bill_by_billid(self, billid):
+        query = "SELECT * FROM facturaempennio WHERE idFacturaEmpennio = %s;"
+        bill = self.executeSQL(query, (billid,))
+        if len(bill) > 0:
+            return True
+        else:
+            return False
+
+    # Obtiene una factura de compra-venta por medio del id de la factura
+    def get_buy_sell_bill_by_billid(self, billid):
+        if self.exists_buy_sell_bill_by_billid(billid):
+            query = "SELECT * FROM facturacompraventa WHERE idFacturaCompra = %s;"
+            bill = self.executeSQL(query, (billid,))
+            return bill[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this id was not found")
+
+    # Obtiene todas las facturas de tipo compra de un usuario
+    def get_buys_bills_by_userid(self, userid):
+        if self.exists_buys_bills_by_userid(userid):
+            query = "SELECT f.* FROM facturacompraventa f INNER JOIN compra c" \
+                    " ON c.facturacompraventa_idFacturaCompra = f.idFacturaCompra WHERE c.usuario_idusuario = %s;"
+            buys_bills = self.executeSQL(query, (userid,))
+            return buys_bills
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this user id was not found")
+
+    # Obtiene una factura empennio por el id
+    def get_pawn_bill_by_billid(self, billid):
+        if self.exists_pawn_bill_by_billid(billid):
+            query = "SELECT * FROM facturaempennio WHERE idFacturaEmpennio = %s;"
+            bill = self.executeSQL(query, (billid,))
+            return bill[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this id was not found")
+
+    # Obtiene todas las facturas empennio de un usuario
+    def get_pawns_bills_by_userid(self, userid):
+        if self.exists_buys_bills_by_userid(userid):
+            query = "SELECT f.* FROM facturaempennio f INNER JOIN empennio e" \
+                    " ON e.facturaempennio_idFacturaEmpennio = f.idFacturaEmpennio WHERE e.usuario_idusuario = %s;"
+            pawns_bills = self.executeSQL(query, (userid,))
+            return pawns_bills
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this user id was not found")
 
 
     @staticmethod
