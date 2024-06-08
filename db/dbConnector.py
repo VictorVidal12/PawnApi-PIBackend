@@ -187,7 +187,7 @@ class ConnectionDB:
 
     def get_peding_sell_offer_by_userid(self, idusuario: int):
         if self.exists_iduser(idusuario):
-            query = "SELECT * FROM oferta WHERE tipo = 'venta' AND estado = 'pendiente_tienda' AND usuario_idusuario = %s;"
+            query = "SELECT * FROM oferta WHERE tipo = 'venta' AND estado = 'pendiente_tienda' AND ofertante = %s;"
             peding_offers = self.executeSQL(query, (idusuario,))
             if len(peding_offers) > 0:
                 return peding_offers
@@ -199,7 +199,7 @@ class ConnectionDB:
 
     def get_peding_pawn_offer_by_userid(self, idusuario: int):
         if self.exists_iduser(idusuario):
-            query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado = 'pendiente_tienda' AND usuario_idusuario = %s;"
+            query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado = 'pendiente_tienda' AND ofertante = %s;"
             peding_offers = self.executeSQL(query, (idusuario,))
             if len(peding_offers) > 0:
                 return peding_offers
@@ -250,14 +250,14 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
     # HU: Actualizar oferta para contraofertar el precio (cliente)
-    def update_offer_with_counteroffer_client(self, contra_oferta: int, idoferta: int, usuario_idusuario: int,
+    def update_offer_with_counteroffer_client(self, contra_oferta: int, idoferta: int, ofertante: int,
                                               producto_idproducto: int):
         if self.exists_idoffer(idoferta):
-            if self.exists_client_type_user_with_this_id(usuario_idusuario):
+            if self.exists_client_type_user_with_this_id(ofertante):
                 if self.exists_idproduct(producto_idproducto):
                     query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'pendiente_tienda' " \
-                            "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `usuario_idusuario` = %s;"
-                    variables = (contra_oferta, idoferta, producto_idproducto, usuario_idusuario,)
+                            "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `ofertante` = %s;"
+                    variables = (contra_oferta, idoferta, producto_idproducto, ofertante,)
                     self.executeSQL(query, variables)
 
                 else:
@@ -273,13 +273,13 @@ class ConnectionDB:
     # HU: Actualizar oferta para contraofertar el precio (tienda)
     def update_offer_with_counteroffer_shop(self, contra_oferta: int, idoferta: int,
                                             producto_idproducto: int):
-        usuario_idusuario = 8
+        idshop = 8
         if self.exists_idoffer(idoferta):
-            if self.exists_shop_type_user_with_this_id(usuario_idusuario):
+            if self.exists_shop_type_user_with_this_id(idshop):
                 if self.exists_idproduct(producto_idproducto):
                     query = "UPDATE `mydb`.`oferta` SET `precio` = %s, estado` = 'pendiente_cliente' " \
-                            "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `usuario_idusuario` = %s;"
-                    variables = (contra_oferta, idoferta, producto_idproducto, usuario_idusuario,)
+                            "WHERE `idoferta` = %s AND `producto_idproducto` = %s AND `ofertante` = %s;"
+                    variables = (contra_oferta, idoferta, producto_idproducto, idshop,)
                     self.executeSQL(query, variables)
                 else:
                     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -317,7 +317,30 @@ class ConnectionDB:
         else:
             return False
 
-    #CREATE OFFER (Falta Probar)
+    def exists_offers_type_sell_with_userid(self, userid: int):
+        query = "SELECT * FROM oferta WHERE ofertante = %s AND tipo = 'venta';"
+        offers = self.executeSQL(query, (userid,))
+        if len(offers) > 0:
+            return True
+        else:
+            return False
+
+    # HU: Obtener productos que se están vendiendo por la tienda
+    def get_products_selling_by_shop(self):
+        idshop = 8
+        if self.exists_offers_type_sell_with_userid(idshop):
+            query = "SELECT p.* FROM producto p INNER JOIN oferta o ON p.idproducto = o.producto_idproducto" \
+                    " WHERE o.tipo = 'venta' AND o.ofertante = %s AND (o.estado = 'pendiente_cliente' OR " \
+                    " o.estado = 'pendiente_tienda');"
+            offers = self.executeSQL(query, (idshop,))
+            if len(offers) > 0:
+                return offers
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers by shop with this state and type was not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers by shop with this type was not found")
 
     #HU: Obtener ofertas de compra en proceso de la tienda
     def get_buy_offers_by_shop_process_state(self):
@@ -761,6 +784,7 @@ class ConnectionDB:
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail="User with old id or user with new id was not found")
+
     #Bill_buy_sell
     def add_bill_buy_sell(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
                           departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
@@ -770,7 +794,7 @@ class ConnectionDB:
                     " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional`," \
                     " `usuario_idusuario`)VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
             variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
-                          precio_envio, precio_IVA, info_adicional, usuario_idusuario)
+                         precio_envio, precio_IVA, info_adicional, usuario_idusuario)
             self.executeSQL(query, variables)
             query_2 = "SELECT * FROM factura_compra ORDER BY idFacturaCompra DESC LIMIT 1;"
             element = self.executeSQL(query_2)
@@ -784,14 +808,13 @@ class ConnectionDB:
                 query = "INSERT INTO `mydb`.`FACTURA_EMPENNIO` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
                         " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional`," \
                         " `usuario_idusuario`, `producto_idproducto`)VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-                variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
-                              precio_envio, precio_IVA, info_adicional, usuario_idusuario, producto_idproducto)
+                variables = (
+                    medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                    precio_envio, precio_IVA, info_adicional, usuario_idusuario, producto_idproducto)
                 self.executeSQL(query, variables)
                 query_2 = "SELECT * FROM factura_empennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
                 element = self.executeSQL(query_2)
                 return element[0]
-
-
 
     @staticmethod
     def check_date(date: str) -> bool:
