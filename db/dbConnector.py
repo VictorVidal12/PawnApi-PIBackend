@@ -566,6 +566,29 @@ class ConnectionDB:
         else:
             return False
 
+    def exists_offers_pawn_type_with_userid(self, userid: int):
+        query = "SELECT * FROM oferta WHERE ofertante = %s AND tipo = 'empennio';"
+        offers = self.executeSQL(query, (userid,))
+        if len(offers) > 0:
+            return True
+        else:
+            return False
+
+    # HU: Obtener mis solicitudes de empeño vigentes
+    def get_peding_pawns_offers_by_userid(self, userid):
+        if self.exists_offers_pawn_type_with_userid(userid):
+            query = "SELECT * FROM oferta WHERE ofertante = %s AND tipo = 'empennio' AND (estado = 'pendiente_cliente'"\
+                    " OR estado = 'pendiente_tienda');"
+            offers = self.executeSQL(query, (userid,))
+            if len(offers) > 0:
+                return offers
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers with this user id was not found in this offers states")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this user id was not found in pawns type offers")
+
     # HU: Obtener las ofertas de tipo venta , en estado pendiente_cliente  de la tienda
     def get_sells_offers_in_client_peding_state(self):
         idusuario = 8
@@ -582,6 +605,48 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="User with this id was not found in shop type users")
+
+    #HU: Obtener todas las ofertas de empeño menos las aceptadas
+    def get_all_pawn_peding_offers_without_finalized(self):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado != 'finalizada';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type and states was not found")
+
+    #HU: Obtener todas las ofertas de empeño
+    def get_all_pawn_peding_offers(self):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type was not found")
+
+    #HU: Obtener todas las ofertas de empeño menos las aceptadas de un cliente
+    def get_all_pawn_peding_offers_without_finalized_by_userid(self, userid):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado != 'finalizada' AND ofertante = %s;"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type and states and user id was not found")
+
+    #HU: Obtener todas las ofertas de empeño de un cliente
+    def get_all_pawn_peding_offers_by_userid(self, userid):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND ofertante = %s;"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this type and userid was not found")
+
+
 
     #HU: Obtener las ventas de un usuario
     def get_sells_by_userid(self, idusuario: int):
@@ -682,8 +747,10 @@ class ConnectionDB:
 
         #PAWN
 
-    #HU: Actualizar estado de un empeño de un cliente a finalizado
-    def update_pawn_state_to_finish_by_client(self, userid):
+
+
+    #HU: Actualizar estado de un empeño de un cliente a pagado
+    def update_pawn_state_to_paid_by_client(self, userid):
         if self.exists_pawn_with_userid(userid):
             query = "UPDATE `mydb`.`EMPENNIO` SET  `estado` = 'pagado' WHERE usuario_idusuario = %s;"
             self.executeSQL(query, (userid,))
