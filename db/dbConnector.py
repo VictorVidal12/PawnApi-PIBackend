@@ -401,7 +401,7 @@ class ConnectionDB:
     def add_offer(self, tipo: str, precio: str, producto_idproducto: int, estado: str, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`oferta` (`tipo`,`precio`,`producto_idproducto`,`estado`,`ofertante`)"\
+                query = "INSERT INTO `mydb`.`oferta` (`tipo`,`precio`,`producto_idproducto`,`estado`,`ofertante`)" \
                         " VALUES (%s,%s, %s,%s,%s);"
                 variables = (tipo, precio, producto_idproducto, estado, usuario_idusuario,)
                 self.executeSQL(query, variables)
@@ -468,7 +468,7 @@ class ConnectionDB:
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha):
-                    query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`,"\
+                    query = "INSERT INTO `mydb`.`COMPRA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`," \
                             "`facturacompraventa_idFacturaCompra` ) VALUES (%s,%s,%s,%s,%s);"
                     variables = (precio, fecha, usuario_idusuario, producto_idproducto,
                                  facturacompraventa_idFacturaCompra)
@@ -682,6 +682,15 @@ class ConnectionDB:
 
         #PAWN
 
+    #HU: Actualizar estado de un empeño de un cliente a finalizado
+    def update_pawn_state_to_finish_by_client(self, userid):
+        if self.exists_pawn_with_userid(userid):
+            query = "UPDATE `mydb`.`EMPENNIO` SET  `estado` = 'pagado' WHERE usuario_idusuario = %s;"
+            self.executeSQL(query, (userid,))
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns with this user id and this state was not found")
+
     def exists_pawn_with_userid(self, idusuario: int):
         query = "SELECT * FROM empennio WHERE usuario_idusuario = %s;"
         pawns = self.executeSQL(query, (idusuario,))
@@ -721,7 +730,7 @@ class ConnectionDB:
             return False
 
     def get_pawn_by_id(self, idempennio: int):
-        query = "SELECT * FROM PRESTAMO p WHERE p.idprestamo = %s;"
+        query = "SELECT * FROM empennio WHERE idempennio = %s;"
         pawn = self.executeSQL(query, (idempennio,))
         if len(pawn) > 0:
             return pawn[0]
@@ -818,6 +827,82 @@ class ConnectionDB:
                 query_2 = "SELECT * FROM factura_empennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
                 element = self.executeSQL(query_2)
                 return element[0]
+
+    def exists_buys_bills_by_userid(self, userid):
+        query = "SELECT f.* FROM facturacompraventa f INNER JOIN compra c" \
+                " ON c.facturacompraventa_idFacturaCompra = f.idFacturaCompra WHERE c.usuario_idusuario = %s;"
+        buys_bills = self.executeSQL(query, (userid,))
+        if len(buys_bills) > 0:
+            return True
+        else:
+            return False
+
+    def exists_buy_sell_bill_by_billid(self, billid):
+        query = "SELECT * FROM facturacompraventa WHERE idFacturaCompra = %s;"
+        bill = self.executeSQL(query, (billid,))
+        if len(bill) > 0:
+            return True
+        else:
+            return False
+
+    def exists_pawns_bills_by_userid(self, userid):
+        query = "SELECT f.* FROM facturaempennio f INNER JOIN empennio e" \
+                " ON e.facturaempennio_idFacturaEmpennio = f.idFacturaEmpennio WHERE e.usuario_idusuario = %s;"
+        pawns_bills = self.executeSQL(query, (userid,))
+        if len(pawns_bills) > 0:
+            return True
+        else:
+            return False
+
+    def exists_pawn_bill_by_billid(self, billid):
+        query = "SELECT * FROM facturaempennio WHERE idFacturaEmpennio = %s;"
+        bill = self.executeSQL(query, (billid,))
+        if len(bill) > 0:
+            return True
+        else:
+            return False
+
+    # Obtiene una factura de compra-venta por medio del id de la factura
+    def get_buy_sell_bill_by_billid(self, billid):
+        if self.exists_buy_sell_bill_by_billid(billid):
+            query = "SELECT * FROM facturacompraventa WHERE idFacturaCompra = %s;"
+            bill = self.executeSQL(query, (billid,))
+            return bill[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this id was not found")
+
+    # Obtiene todas las facturas de tipo compra de un usuario
+    def get_buys_bills_by_userid(self, userid):
+        if self.exists_buys_bills_by_userid(userid):
+            query = "SELECT f.* FROM facturacompraventa f INNER JOIN compra c" \
+                    " ON c.facturacompraventa_idFacturaCompra = f.idFacturaCompra WHERE c.usuario_idusuario = %s;"
+            buys_bills = self.executeSQL(query, (userid,))
+            return buys_bills
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this user id was not found")
+
+    # Obtiene una factura empennio por el id
+    def get_pawn_bill_by_billid(self, billid):
+        if self.exists_pawn_bill_by_billid(billid):
+            query = "SELECT * FROM facturaempennio WHERE idFacturaEmpennio = %s;"
+            bill = self.executeSQL(query, (billid,))
+            return bill[0]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this id was not found")
+
+    # Obtiene todas las facturas empennio de un usuario
+    def get_pawns_bills_by_userid(self, userid):
+        if self.exists_buys_bills_by_userid(userid):
+            query = "SELECT f.* FROM facturaempennio f INNER JOIN empennio e" \
+                    " ON e.facturaempennio_idFacturaEmpennio = f.idFacturaEmpennio WHERE e.usuario_idusuario = %s;"
+            pawns_bills = self.executeSQL(query, (userid,))
+            return pawns_bills
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Bills with this user id was not found")
 
     @staticmethod
     def check_date(date: str) -> bool:
