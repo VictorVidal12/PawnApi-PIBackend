@@ -678,13 +678,13 @@ class ConnectionDB:
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
+
         query = "SELECT * FROM empennio WHERE  estado = 'en_curso';"
-        pawns = self.executeSQL(query, (idshop,))
+        pawns = self.executeSQL(query)
         if len(pawns) > 0:
             return pawns
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail="Pawns by shop with this state was not found")
+        elif len(pawns) == 0:
+            return []
 
     def exists_idpawn(self, idempennio):
         query = "SELECT * FROM empennio WHERE idempennio = %s;"
@@ -761,6 +761,37 @@ class ConnectionDB:
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail="User with old id or user with new id was not found")
+    #Bill_buy_sell
+    def add_bill_buy_sell(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
+                          departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
+                          precio_IVA: int, info_adicional: str, usuario_idusuario: int):
+        if self.exists_iduser(usuario_idusuario):
+            query = "INSERT INTO `mydb`.`FACTURA_COMPRA` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional`," \
+                    " `usuario_idusuario`)VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+            variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                          precio_envio, precio_IVA, info_adicional, usuario_idusuario)
+            self.executeSQL(query, variables)
+            query_2 = "SELECT * FROM factura_compra ORDER BY idFacturaCompra DESC LIMIT 1;"
+            element = self.executeSQL(query_2)
+            return element[0]
+
+    def add_bill_pawn(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
+                      departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
+                      precio_IVA: int, info_adicional: str, usuario_idusuario: int, producto_idproducto: int):
+        if self.exists_iduser(usuario_idusuario):
+            if self.exists_idproduct(producto_idproducto):
+                query = "INSERT INTO `mydb`.`FACTURA_EMPENNIO` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                        " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional`," \
+                        " `usuario_idusuario`, `producto_idproducto`)VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+                variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                              precio_envio, precio_IVA, info_adicional, usuario_idusuario, producto_idproducto)
+                self.executeSQL(query, variables)
+                query_2 = "SELECT * FROM factura_empennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
+                element = self.executeSQL(query_2)
+                return element[0]
+
+
 
     @staticmethod
     def check_date(date: str) -> bool:
