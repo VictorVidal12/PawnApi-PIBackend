@@ -342,18 +342,8 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offers by shop with this type was not found")
 
-    #HU: Obtener ofertas de compra en proceso de la tienda
-    def get_buy_offers_by_shop_process_state(self):
-        idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'compra';"
-        buys = self.executeSQL(query, (idtienda,))
-        if len(buys) > 0:
-            return buys
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Buys by shop with this state was not found")
 
-    #HU: Obtener ofertas de compra en proceso de la tienda
+    #HU: Obtener ofertas de tipo compra en estado en_curso y el usuario de la oferta es la tienda
     def get_buys_offers_by_shop_process_state(self):
         idtienda = 8
         query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'compra';"
@@ -364,39 +354,67 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Buys by shop with this state was not found")
 
-    # HU: Obtener ofertas de empeño en proceso de la tienda
-    def get_pawns_offers_by_shop_process_state(self):
-        idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'empennio';"
-        pawns = self.executeSQL(query, (idtienda,))
+    # HU: Obtener ofertas de tipo empennio en estado en_curso de la tienda
+    def get_pawns_offers_in_process_state(self):
+        query = "SELECT * FROM oferta WHERE estado = 'en_curso' AND tipo = 'empennio';"
+        pawns = self.executeSQL(query)
         if len(pawns) > 0:
             return pawns
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns by shop with this state was not found")
+                                detail="Pawns offers with this state was not found")
 
     #HU: Obtener ofertas de venta en proceso de la tienda
-    def get_sells_offers_by_shop_process_state(self):
-        idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'venta';"
-        sells = self.executeSQL(query, (idtienda,))
-        if len(sells) > 0:
-            return sells
+    def get_sells_offers_in_process_state(self):
+        query = "SELECT * FROM oferta WHERE estado = 'en_curso' AND tipo = 'venta';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Sells by shop with this state was not found")
+                                detail="Sells with this state was not found")
+
+    #HU: Obtener las ofertas de tipo venta y estado pendiente_tienda
+    def get_sells_offers_in_peding_shop_state(self):
+        query = "SELECT * FROM oferta WHERE estado = 'pendiente_tienda' AND tipo = 'venta';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Sells with this state was not found")
 
     # HU: Obtener ofertas de empeño en pendiente de la tienda
 
-    def get_pawns_offers_by_shop_in_peding_client_state(self):
+    def get_pawns_offers_in_peding_client_state(self):
         idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'pendiente_cliente' AND tipo = 'empennio';"
+        query = "SELECT * FROM oferta WHERE estado = 'pendiente_cliente' AND tipo = 'empennio';"
         pawns = self.executeSQL(query, (idtienda,))
         if len(pawns) > 0:
             return pawns
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns by shop with this state was not found")
+                                detail="Pawns offers by shop with this state was not found")
+
+    # Obtener las ofertas de tipo empeño con estado pendiente_tienda
+    def get_pawn_offers_with_peding_shop_state(self):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado = 'pendiente_tienda';"
+        offers = self.executeSQL(query)
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns offers with this state was not found")
+
+    # Obtener las ofertas de tipo empeño de un cliente con estado pendiente_tienda
+    def get_pawn_offers_with_peding_shop_state_by_userid(self, userid):
+        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado = 'pendiente_tienda' AND ofertante = %s;"
+        offers = self.executeSQL(query, (userid,))
+        if len(offers) > 0:
+            return offers
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Pawns offers with this state and user id was not found")
 
     def add_offer(self, tipo: str, precio: str, producto_idproducto: int, estado: str, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
@@ -606,7 +624,7 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="User with this id was not found in shop type users")
 
-    #HU: Obtener todas las ofertas de empeño menos las aceptadas
+    #HU: Obtener todas las ofertas de empeño menos las finalizadas
     def get_all_pawn_peding_offers_without_finalized(self):
         query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado != 'finalizada';"
         offers = self.executeSQL(query)
@@ -626,15 +644,15 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offers with this type was not found")
 
-    #HU: Obtener todas las ofertas de empeño menos las aceptadas de un cliente
+    #HU: Obtener todas las ofertas de empeño menos las finalizadas de un cliente
     def get_all_pawn_peding_offers_without_finalized_by_userid(self, userid):
         query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado != 'finalizada' AND ofertante = %s;"
-        offers = self.executeSQL(query)
+        offers = self.executeSQL(query, (userid,))
         if len(offers) > 0:
             return offers
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Offers with this type and states and user id was not found")
+                                detail="Offers with this type, states and user id was not found")
 
     #HU: Obtener todas las ofertas de empeño de un cliente
     def get_all_pawn_peding_offers_by_userid(self, userid):
@@ -747,13 +765,11 @@ class ConnectionDB:
 
         #PAWN
 
-
-
     #HU: Actualizar estado de un empeño de un cliente a pagado
-    def update_pawn_state_to_paid_by_client(self, userid):
+    def update_pawn_state_to_paid_by_client(self, userid, pawnid):
         if self.exists_pawn_with_userid(userid):
-            query = "UPDATE `mydb`.`EMPENNIO` SET  `estado` = 'pagado' WHERE usuario_idusuario = %s;"
-            self.executeSQL(query, (userid,))
+            query = "UPDATE empennio SET  `estado` = 'pagado' WHERE usuario_idusuario = %s AND idempennio = %s;"
+            self.executeSQL(query, (userid, pawnid,))
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Pawns with this user id and this state was not found")
@@ -806,14 +822,15 @@ class ConnectionDB:
 
     #CREATE PAWN (falta probar)
     def add_pawn(self, precio: int, estado: str, fecha_inicio: str, fecha_final: str,
-                 interes: int, usuario_idusuario: int, producto_idproducto: int):
+                 interes: int, usuario_idusuario: int, producto_idproducto: int, idfacturaempennio: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha_inicio) and self.check_date(fecha_final):
                     query = "INSERT INTO `mydb`.`EMPENNIO` (`precio`,`estado`, `fecha_inicio`, `fecha_final`," \
-                            " `interes`, `usuario_idusuario`, `producto_idproducto`) VALUES (%s,%s,%s,%s,%s,%s,%s);"
+                            " `interes`, `usuario_idusuario`, `producto_idproducto`,"\
+                            "`facturaempennio_idFacturaEmpennio`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s);"
                     variables = (precio, estado, fecha_inicio, fecha_final, interes, usuario_idusuario,
-                                 producto_idproducto)
+                                 producto_idproducto, idfacturaempennio)
                     self.executeSQL(query, variables)
                     query_2 = "SELECT * FROM empennio ORDER BY idempennio DESC LIMIT 1;"
                     element = self.executeSQL(query_2)
