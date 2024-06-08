@@ -54,13 +54,37 @@ async def offer(nombre, descripcion, categoria, precio : int, id_usuario: int,im
     }
     offer =dbConnect.add_offer_type_sell_by_client(offer["precio"], offer["producto_idproducto"], offer["ofertante"])
     return JSONResponse(content=offer, status_code=status.HTTP_201_CREATED)
-
+@offerRouter.get("/SalesByShop", status_code=status.HTTP_200_OK)
+async def salesByShop():
+    sales = dbConnect.get_products_selling_by_shop()
+    return JSONResponse(content=sales, status_code=status.HTTP_200_OK)
 def delete_image(image_path: str):
     if os.path.exists(image_path):
         os.remove(image_path)
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Image not found")
+
+
+@offerRouter.get("/pending_offers_not_finalized_by_userid/{idusuario}", status_code=status.HTTP_200_OK, response_model=list[Offer])
+async def get_pending_offers_not_finalized_by_userid(idusuario: int):
+    offers = dbConnect.get_all_pawn_peding_offers_without_finalized_by_userid(idusuario)
+    return JSONResponse(content=offers, status_code=status.HTTP_200_OK)
+@offerRouter.get("/user_pawn_offers_in_pending/{id}", status_code=status.HTTP_200_OK, response_model=list[Offer])
+async def get_user_pawn_offers_in_pending(id: int):
+    offers = dbConnect.get_peding_pawns_offers_by_userid(id)
+    return JSONResponse(content=offers, status_code=status.HTTP_200_OK)
+
+@offerRouter.put("/finish_offer/{id}", status_code=status.HTTP_200_OK, response_model=Offer)
+async def finish_offer(id:int):
+    offer = dbConnect.finish_offer(id)
+    return JSONResponse(content=offer, status_code=status.HTTP_200_OK)
+
+
+@offerRouter.put("/change_offer_state_to_in_shipping/{id}", status_code=status.HTTP_200_OK, response_model=Offer)
+async def finish_offer(id:int):
+    offer = dbConnect.change_offer_state_to_in_shipping(id)
+    return JSONResponse(content=offer, status_code=status.HTTP_200_OK)
 
 
 def check_category(categoria: str):

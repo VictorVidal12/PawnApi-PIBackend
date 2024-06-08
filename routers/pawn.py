@@ -26,6 +26,10 @@ async def add_pawn(pawn: Pawn):
 
 @pawnRouter.put("/payPawn/{id}", status_code= status.HTTP_200_OK, response_model = Pawn)
 async def pay_pawn(id: int, id_factura_pago_cliente_empennio: int):
+    pawn = change_item_datetime_to_str(dbConnect.pay_pawn(id,id_factura_pago_cliente_empennio))
+    return JSONResponse(content=pawn, status_code=status.HTTP_200_OK)
+
+
 
 
 
