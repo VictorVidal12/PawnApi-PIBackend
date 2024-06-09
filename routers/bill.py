@@ -62,7 +62,7 @@ async def add_bill_BillPayPawn(bill: BillPayPawn):
 
 
 def check_payment_method(medio_pago: str) -> str:
-    methods = ["pse", "tarjeta_debito","tarjeta_credito", "transferencia"]
+    methods = ["pse", "tarjeta_debito","tarjeta_credito", "transferencia", "efectivo"]
     if medio_pago.lower() in methods:
         return medio_pago.lower().capitalize()
     else:

@@ -7,12 +7,12 @@ from fastapi.responses import JSONResponse
 dbConnect = ConnectionDB()
 pawnRouter = APIRouter(prefix="/pawn", tags=["pawn"])
 
-@pawnRouter.get("/currentShop", status_code= status.HTTP_200_OK, response_model = list[Pawn])
+@pawnRouter.get("/currentShop", status_code= status.HTTP_200_OK)
 async def get_shop_pawns():
     pawns = change_datetime_to_str(dbConnect.get_currents_pawns_by_shop())
     return JSONResponse(content=pawns, status_code=status.HTTP_200_OK)
 
-@pawnRouter.get("/clientPawns/{id}", status_code= status.HTTP_200_OK, response_model = list[Pawn])
+@pawnRouter.get("/clientPawns/{id}", status_code= status.HTTP_200_OK)
 async def get_client_pawns(id: int):
     pawns = change_datetime_to_str(dbConnect.get_currents_pawns_by_userid(id))
     return JSONResponse(content=pawns, status_code=status.HTTP_200_OK)

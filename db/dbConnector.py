@@ -541,14 +541,17 @@ class ConnectionDB:
                                     detail="User with old id or user with new id was not found")
 
     def get_shopping_by_user_id(self, idusuario: int):
-        if not self.buy_with_this_user_id_exists(idusuario):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping with this id were not found")
+        if not self.get_user_by_id(idusuario):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
         else:
             query = "SELECT c.*, p.* FROM COMPRA c INNER JOIN producto p ON c.producto_idproducto = p.idproducto"\
                     " WHERE c.usuario_idusuario = %s;"
             variables = (idusuario,)
             buys = self.executeSQL(query, variables)
-            return buys
+            if len(buys) > 0:
+                return buys
+            else:
+                return []
 
     def get_buys(self):
         query = "SELECT * FROM COMPRA;"

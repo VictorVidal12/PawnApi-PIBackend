@@ -66,13 +66,18 @@ def delete_image(image_path: str):
                             detail="Image not found")
 
 
-@offerRouter.get("/pending_offers_not_finalized_by_userid/{idusuario}", status_code=status.HTTP_200_OK, response_model=list[Offer])
+@offerRouter.get("/pending_offers_not_finalized_by_userid/{idusuario}", status_code=status.HTTP_200_OK)
 async def get_pending_offers_not_finalized_by_userid(idusuario: int):
     offers = dbConnect.get_all_pawn_peding_offers_without_finalized_by_userid(idusuario)
     return JSONResponse(content=offers, status_code=status.HTTP_200_OK)
-@offerRouter.get("/user_pawn_offers_in_pending/{id}", status_code=status.HTTP_200_OK, response_model=list[Offer])
+@offerRouter.get("/user_pawn_offers_in_pending/{id}", status_code=status.HTTP_200_OK)
 async def get_user_pawn_offers_in_pending(id: int):
     offers = dbConnect.get_peding_pawns_offers_by_userid(id)
+    return JSONResponse(content=offers, status_code=status.HTTP_200_OK)
+
+@offerRouter.get("/user_sell_offers_in_pending/{id}", status_code=status.HTTP_200_OK)
+async def get_user_sell_offers_in_pending(id: int):
+    offers = dbConnect.get_peding_sell_offer_by_userid(id)
     return JSONResponse(content=offers, status_code=status.HTTP_200_OK)
 
 @offerRouter.put("/finish_offer/{id}", status_code=status.HTTP_200_OK, response_model=Offer)

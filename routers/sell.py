@@ -11,9 +11,9 @@ sellRouter = APIRouter(prefix="/sell", tags=["sell"])
 
 
 
-@sellRouter.get("/{id}", status_code= status.HTTP_200_OK, response_model = list[Sell])
-async def get_user_shopping(user_id : int):
-    sales = change_datetime_to_str(dbConnect.get_sells_by_userid(user_id))
+@sellRouter.get("/{id}", status_code= status.HTTP_200_OK)
+async def get_user_shopping(id : int):
+    sales = change_datetime_to_str(dbConnect.get_sells_by_userid(id))
     return JSONResponse(content=sales, status_code=status.HTTP_200_OK)
 @sellRouter.post("/", status_code= status.HTTP_201_CREATED,response_model=Sell)
 async def add_sell(sell: Sell):
