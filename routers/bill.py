@@ -13,7 +13,7 @@ billRouter = APIRouter(prefix="/bill", tags=["bill"])
 @billRouter.post("/BillBuySell", status_code=status.HTTP_201_CREATED, response_model=BillBuySell)
 async def add_bill_BillBuySell(bill: BillBuySell):
     dict_bill = bill.dict()
-    dict_bill["municipio"] = dict_bill["municipio"].lower().capitalize()
+    dict_bill["municipio"] = dict_bill["municipio"].lower()
     dict_bill["medio_pago"] = check_payment_method(dict_bill["medio_pago"])
     dict_bill["departamento"] = check_department(dict_bill["departamento"])
     if dict_bill["telefono"].isdigit() and len(dict_bill["telefono"]) == 10:
@@ -29,7 +29,7 @@ async def add_bill_BillBuySell(bill: BillBuySell):
 @billRouter.post("/BillPawn", status_code=status.HTTP_201_CREATED, response_model=BillPawn)
 async def add_bill_BillPawn(bill: BillPawn):
     dict_bill = bill.dict()
-    dict_bill["municipio"] = dict_bill["municipio"].lower().capitalize()
+    dict_bill["municipio"] = dict_bill["municipio"].lower()
     dict_bill["medio_pago"] = check_payment_method(dict_bill["medio_pago"])
     dict_bill["departamento"] = check_department(dict_bill["departamento"])
     if dict_bill["telefono"].isdigit() and len(dict_bill["telefono"]) == 10:
@@ -44,27 +44,11 @@ async def add_bill_BillPawn(bill: BillPawn):
 
 
 
-@billRouter.post("/BillPayPawn", status_code=status.HTTP_201_CREATED, response_model=BillPayPawn)
-async def add_bill_BillPayPawn(bill: BillPayPawn):
-    dict_bill = bill.dict()
-    dict_bill["municipio"] = dict_bill["municipio"].lower().capitalize()
-    dict_bill["medio_pago"] = check_payment_method(dict_bill["medio_pago"])
-    dict_bill["departamento"] = check_department(dict_bill["departamento"])
-    if dict_bill["telefono"].isdigit() and len(dict_bill["telefono"]) == 10:
-        pass
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail= "Phone is invalid")
-    del dict_bill["idFacturaEmpennio"]
-    bill = dbConnect.add_bill_pay_pawn(**dict_bill)
-    if bill:
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content=bill)
-    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cannot create the pawn payment bill" )
-
 
 def check_payment_method(medio_pago: str) -> str:
     methods = ["pse", "tarjeta_debito","tarjeta_credito", "transferencia", "efectivo"]
     if medio_pago.lower() in methods:
-        return medio_pago.lower().capitalize()
+        return medio_pago.lower()
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The payment method is incorrect")
 
@@ -105,6 +89,6 @@ def check_department(departamento: str) -> str:
         "vichada"
     ]
     if departamento.lower() in departamentos_colombia:
-        return departamento.lower().capitalize()
+        return departamento.lower()
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The departament is incorrect")

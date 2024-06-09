@@ -15,12 +15,6 @@ sellRouter = APIRouter(prefix="/sell", tags=["sell"])
 async def get_user_shopping(id : int):
     sales = change_datetime_to_str(dbConnect.get_sells_by_userid(id))
     return JSONResponse(content=sales, status_code=status.HTTP_200_OK)
-@sellRouter.post("/", status_code= status.HTTP_201_CREATED,response_model=Sell)
-async def add_sell(sell: Sell):
-    sale = dbConnect.add_sell(sell.precio, sell.fecha, sell.usuario_idusuario, sell.producto_idproducto, sell.id_factura_compraventa)
-    sale["fecha"] = str(sale["fecha"])
-    if sale:
-        return JSONResponse(content=sale, status_code=status.HTTP_201_CREATED)
 
 
 def check_date(date: str) -> bool:

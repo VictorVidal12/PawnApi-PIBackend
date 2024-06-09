@@ -185,30 +185,55 @@ class ConnectionDB:
 
     #OFERTA
 
-    def get_peding_sell_offer_by_userid(self, idusuario: int):
-        if self.exists_iduser(idusuario):
+    def get_peding_client_state_pawns_offers_by_userid(self, userid):
+        if self.get_user_by_id(userid):
             query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
-                    " WHERE o.tipo = 'venta' AND o.estado = 'pendiente_tienda' AND o.ofertante = %s;"
-            peding_offers = self.executeSQL(query, (idusuario,))
-            if len(peding_offers) > 0:
-                return peding_offers
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail="Offers in peding state was not found")
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+                    " WHERE o.ofertante = %s AND o.tipo = 'empennio' AND o.estado = 'pendiente_cliente';"
 
-    def get_peding_pawns_offers_by_userid(self, userid):
-        if self.exists_offers_pawn_type_with_userid(userid):
+            offers = self.executeSQL(query, (userid,))
+            if len(offers) > 0:
+                return offers
+            else:
+                return []
+
+    def get_peding_client_state_sell_offers_by_userid(self, userid):
+        if self.get_user_by_id(userid):
             query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
-                    " WHERE o.ofertante = %s AND o.tipo = 'empennio' AND (o.estado = 'pendiente_cliente'" \
-                    " OR o.estado = 'pendiente_tienda');"
+                    " WHERE o.ofertante = %s AND o.tipo = 'venta' AND o.estado = 'pendiente_cliente';"
             offers = self.executeSQL(query, (userid,))
             if len(offers) > 0:
                 return offers
             else:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail="Offers with this user id was not found in this offers states")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this user id was not found in pawns type offers")
+
+    def get_peding_shop_state_pawns_offers_by_userid(self, userid):
+        if self.get_user_by_id(userid):
+            query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                    " WHERE o.ofertante = %s AND o.tipo = 'empennio' AND o.estado = 'pendiente_tienda';"
+
+            offers = self.executeSQL(query, (userid,))
+            if len(offers) > 0:
+                return offers
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="Offers with this user id was not found in this offers states")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offers with this user id was not found in pawns type offers")
+
+    def get_peding_shop_state_sell_offers_by_userid(self, userid):
+        if self.get_user_by_id(userid):
+            query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                    " WHERE o.ofertante = %s AND o.tipo = 'venta' AND o.estado = 'pendiente_tienda';"
+            offers = self.executeSQL(query, (userid,))
+            if len(offers) > 0:
+                return offers
+            else:
+                return []
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offers with this user id was not found in pawns type offers")
@@ -283,14 +308,43 @@ class ConnectionDB:
                                 detail="Offer with this id was not found")
 
     def get_all_pawn_peding_offers_without_finalized_by_userid(self, userid):
+        self.get_user_by_id(userid)
         query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
                 " WHERE o.tipo = 'empennio' AND o.estado != 'finalizada' AND o.ofertante = %s;"
         offers = self.executeSQL(query, (userid,))
         if len(offers) > 0:
             return offers
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Offers with this type, states and user id was not found")
+            return []
+
+    def get_all_pawn_peding_offers_without_finalized_state(self):
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                " WHERE o.tipo = 'empennio' AND o.estado != 'finalizada'AND o.ofertante != %s;"
+        offers = self.executeSQL(query, (8,))
+        if len(offers) > 0:
+            return offers
+        else:
+            return []
+
+    def get_all_sell_peding_offers_without_finalized_state(self):
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                " WHERE o.tipo = 'venta' AND o.estado != 'finalizada' AND o.ofertante != %s;"
+        offers = self.executeSQL(query, (8,))
+        if len(offers) > 0:
+            return offers
+        else:
+            return []
+
+
+    def get_all_sell_peding_offers_without_finalized_by_userid(self, userid):
+        self.get_user_by_id(userid)
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                " WHERE o.tipo = 'venta' AND o.estado != 'finalizada' AND o.ofertante = %s;"
+        offers = self.executeSQL(query, (userid,))
+        if len(offers) > 0:
+            return offers
+        else:
+            return []
 
     # HU: Actualizar oferta para contraofertar el precio (tienda)
     def update_offer_with_counteroffer_shop(self, contra_oferta: int, idoferta: int,
@@ -358,8 +412,7 @@ class ConnectionDB:
             if len(offers) > 0:
                 return offers
             else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail="Offers by shop with this state and type was not found")
+                return []
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offers by shop with this type was not found")
@@ -414,16 +467,34 @@ class ConnectionDB:
 
     # HU: Obtener ofertas de empeño en pendiente de la tienda
 
-    def get_pawns_offers_by_shop_in_peding_client_state(self):
-        idtienda = 8
+    def get_pawns_offers_by_shop_in_peding_state(self):
         query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto"\
-                " WHERE o.ofertante = %s AND o.estado = 'pendiente_cliente' AND o.tipo = 'empennio';"
-        pawns = self.executeSQL(query, (idtienda,))
+                " WHERE (o.estado = 'pendiente_cliente' OR  o.estado = 'pendiente_tienda') AND o.tipo = 'empennio';"
+        pawns = self.executeSQL(query)
         if len(pawns) > 0:
             return pawns
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Pawns by shop with this state was not found")
+            return []
+
+    def get_all_pawn_on_the_way_offers(self):
+        query = "SELECT o.*, p.* FROM OFERTA o INNER JOIN PRODUCTO p ON o.producto_idproducto = p.idproducto"\
+                " WHERE o.estado = 'en_curso' AND o.tipo = 'empennio';"
+        offers = self.executeSQL(query)
+        if len(offers)>0:
+            return offers
+        else:
+            return []
+
+    def get_all_sell_offers_on_the_way(self):
+        query = "SELECT o.*, p.* FROM OFERTA o INNER JOIN PRODUCTO p ON o.producto_idproducto = p.idproducto"\
+                " WHERE o.estado = 'en_curso' AND o.tipo = 'venta';"
+        offers = self.executeSQL(query)
+        if len(offers)>0:
+            return offers
+        else:
+            return []
+
+
 
     def add_offer(self, tipo: str, precio: str, producto_idproducto: int, estado: str, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
@@ -726,9 +797,20 @@ class ConnectionDB:
 
     # HU: Obtener mis empeños vigentes
     def get_currents_pawns_by_userid(self, idusuario: int):
-        if self.exists_pawn_with_userid(idusuario):
+        if self.get_user_by_id(idusuario):
             query = "SELECT e.*, p.* FROM empennio e INNER JOIN producto p ON e.producto_idproducto = p.idproducto"\
                     " WHERE e.usuario_idusuario = %s AND e.estado = 'en_curso';"
+            pawns = self.executeSQL(query, (idusuario,))
+            if len(pawns) > 0:
+                return pawns
+            else:
+                return []
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawns with this user id was not found")
+
+    def get_pawns_by_userid(self, idusuario: int):
+        if self.get_user_by_id(idusuario):
+            query = "SELECT e.*, p.* FROM empennio e INNER JOIN producto p ON e.producto_idproducto = p.idproducto"\
+                    " WHERE e.usuario_idusuario = %s;"
             pawns = self.executeSQL(query, (idusuario,))
             if len(pawns) > 0:
                 return pawns
@@ -814,13 +896,13 @@ class ConnectionDB:
             self.executeSQL(query, variables)
             return self.get_offer_by_id(id_offer)
 
-    def change_offer_state_to_in_shipping(self, id_offer):
+    def update_offer_state(self, id_offer, state : str):
         if not self.get_offer_by_id(id_offer):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offer with this id does not exist")
         else:
             query = "UPDATE `mydb`.`OFERTA` SET  `estado` = %s WHERE `idoferta` = %s ;"
-            variables = ("en_curso", id_offer)
+            variables = (state, id_offer)
             self.executeSQL(query, variables)
             return self.get_offer_by_id(id_offer)
 
