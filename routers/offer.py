@@ -110,9 +110,12 @@ async def pawn_offers_not_finalized():
 
 
 @offerRouter.put("/update_offer_state", status_code=status.HTTP_200_OK, response_model=Offer)
-async def update_offer_state(id:int, state:str):
+async def update_offer_state(id:int, state:str, id_acceptant = None  ):
     state = check_state(state)
-    offer = dbConnect.update_offer_state(id, state)
+    if state == "finalizada":
+        offer = dbConnect.finish_offer(id, id_acceptant)
+    else:
+        offer = dbConnect.update_offer_state(id, state)
     return JSONResponse(content=offer, status_code=status.HTTP_200_OK)
 
 

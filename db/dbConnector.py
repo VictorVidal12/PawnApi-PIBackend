@@ -886,13 +886,16 @@ class ConnectionDB:
         self.executeSQL(query, variables)
         return self.get_pawn_by_id(id_pawn)
 
-    def finish_offer(self, id_offer):
+    def finish_offer(self, id_offer, id_acceptant : id):
+        if not self.get_user_by_id(id_acceptant):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="User with this id does not exist")
         if not self.get_offer_by_id(id_offer):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offer with this id does not exist")
         else:
-            query = "UPDATE `mydb`.`OFERTA` SET  `estado` = %s WHERE `idoferta` = %s ;"
-            variables = ("finalizada", id_offer)
+            query = "UPDATE `mydb`.`OFERTA` SET  `estado` = %s, `aceptante` = %s WHERE `idoferta` = %s ;"
+            variables = ("finalizada",id_acceptant, id_offer)
             self.executeSQL(query, variables)
             return self.get_offer_by_id(id_offer)
 
