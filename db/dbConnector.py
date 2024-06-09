@@ -187,7 +187,8 @@ class ConnectionDB:
 
     def get_peding_sell_offer_by_userid(self, idusuario: int):
         if self.exists_iduser(idusuario):
-            query = "SELECT * FROM oferta WHERE tipo = 'venta' AND estado = 'pendiente_tienda' AND ofertante = %s;"
+            query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                    " WHERE o.tipo = 'venta' AND o.estado = 'pendiente_tienda' AND o.ofertante = %s;"
             peding_offers = self.executeSQL(query, (idusuario,))
             if len(peding_offers) > 0:
                 return peding_offers
@@ -199,8 +200,9 @@ class ConnectionDB:
 
     def get_peding_pawns_offers_by_userid(self, userid):
         if self.exists_offers_pawn_type_with_userid(userid):
-            query = "SELECT * FROM oferta WHERE ofertante = %s AND tipo = 'empennio' AND (estado = 'pendiente_cliente'"\
-                    " OR estado = 'pendiente_tienda');"
+            query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                    " WHERE o.ofertante = %s AND o.tipo = 'empennio' AND (o.estado = 'pendiente_cliente'" \
+                    " OR o.estado = 'pendiente_tienda');"
             offers = self.executeSQL(query, (userid,))
             if len(offers) > 0:
                 return offers
@@ -218,21 +220,7 @@ class ConnectionDB:
             return True
         else:
             return False
-    def get_products_selling_by_shop(self):
-        idshop = 8
-        if self.exists_offers_type_sell_with_userid(idshop):
-            query = "SELECT p.* FROM producto p INNER JOIN oferta o ON p.idproducto = o.producto_idproducto" \
-                    " WHERE o.tipo = 'venta' AND o.ofertante = %s AND (o.estado = 'pendiente_cliente' OR " \
-                    " o.estado = 'pendiente_tienda');"
-            offers = self.executeSQL(query, (idshop,))
-            if len(offers) > 0:
-                return offers
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                    detail="Offers by shop with this state and type was not found")
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="Offers by shop with this type was not found")
+
     # El cliente crea la oferta
     # HU: Crear oferta de empeño(cliente)
     def add_offer_type_pawn_by_client(self, precio: int, producto_idproducto: int, usuario_idusuario: int):
@@ -294,9 +282,9 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offer with this id was not found")
 
-
     def get_all_pawn_peding_offers_without_finalized_by_userid(self, userid):
-        query = "SELECT * FROM oferta WHERE tipo = 'empennio' AND estado != 'finalizada' AND ofertante = %s;"
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                " WHERE o.tipo = 'empennio' AND o.estado != 'finalizada' AND o.ofertante = %s;"
         offers = self.executeSQL(query, (userid,))
         if len(offers) > 0:
             return offers
@@ -363,7 +351,7 @@ class ConnectionDB:
     def get_products_selling_by_shop(self):
         idshop = 8
         if self.exists_offers_type_sell_with_userid(idshop):
-            query = "SELECT p.* FROM producto p INNER JOIN oferta o ON p.idproducto = o.producto_idproducto" \
+            query = "SELECT o.*, p.* FROM producto p INNER JOIN oferta o ON p.idproducto = o.producto_idproducto" \
                     " WHERE o.tipo = 'venta' AND o.ofertante = %s AND (o.estado = 'pendiente_cliente' OR " \
                     " o.estado = 'pendiente_tienda');"
             offers = self.executeSQL(query, (idshop,))
@@ -379,7 +367,8 @@ class ConnectionDB:
     #HU: Obtener ofertas de compra en proceso de la tienda
     def get_buy_offers_by_shop_process_state(self):
         idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'compra';"
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+                " WHERE o.ofertante = %s AND o.estado = 'en_curso' AND o.tipo = 'compra';"
         buys = self.executeSQL(query, (idtienda,))
         if len(buys) > 0:
             return buys
@@ -390,7 +379,8 @@ class ConnectionDB:
     #HU: Obtener ofertas de compra en proceso de la tienda
     def get_buys_offers_by_shop_process_state(self):
         idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'compra';"
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto"\
+                " WHERE o.ofertante = %s AND o.estado = 'en_curso' AND o.tipo = 'compra';"
         buys = self.executeSQL(query, (idtienda,))
         if len(buys) > 0:
             return buys
@@ -401,7 +391,8 @@ class ConnectionDB:
     # HU: Obtener ofertas de empeño en proceso de la tienda
     def get_pawns_offers_by_shop_process_state(self):
         idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'empennio';"
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto"\
+                " WHERE o.ofertante = %s AND o.estado = 'en_curso' AND o.tipo = 'empennio';"
         pawns = self.executeSQL(query, (idtienda,))
         if len(pawns) > 0:
             return pawns
@@ -412,7 +403,8 @@ class ConnectionDB:
     #HU: Obtener ofertas de venta en proceso de la tienda
     def get_sells_offers_by_shop_process_state(self):
         idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'en_curso' AND tipo = 'venta';"
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto"\
+                " WHERE o.ofertante = %s AND o.estado = 'en_curso' AND o.tipo = 'venta';"
         sells = self.executeSQL(query, (idtienda,))
         if len(sells) > 0:
             return sells
@@ -424,7 +416,8 @@ class ConnectionDB:
 
     def get_pawns_offers_by_shop_in_peding_client_state(self):
         idtienda = 8
-        query = "SELECT * FROM oferta WHERE ofertante = %s AND estado = 'pendiente_cliente' AND tipo = 'empennio';"
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto"\
+                " WHERE o.ofertante = %s AND o.estado = 'pendiente_cliente' AND o.tipo = 'empennio';"
         pawns = self.executeSQL(query, (idtienda,))
         if len(pawns) > 0:
             return pawns
@@ -435,7 +428,7 @@ class ConnectionDB:
     def add_offer(self, tipo: str, precio: str, producto_idproducto: int, estado: str, usuario_idusuario: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
-                query = "INSERT INTO `mydb`.`oferta` (`tipo`,`precio`,`producto_idproducto`,`estado`,`ofertante`)"\
+                query = "INSERT INTO `mydb`.`oferta` (`tipo`,`precio`,`producto_idproducto`,`estado`,`ofertante`)" \
                         " VALUES (%s,%s, %s,%s,%s);"
                 variables = (tipo, precio, producto_idproducto, estado, usuario_idusuario,)
                 self.executeSQL(query, variables)
@@ -497,8 +490,6 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buy with this id was not found")
 
-
-
     def buy_with_this_id_exist(self, idcompra: int):
         query = "SELECT * FROM COMPRA c WHERE c.idcompra = %s;"
         buy = self.executeSQL(query, (idcompra,))
@@ -553,7 +544,8 @@ class ConnectionDB:
         if not self.buy_with_this_user_id_exists(idusuario):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shopping with this id were not found")
         else:
-            query = "SELECT * FROM COMPRA c WHERE c.usuario_idusuario = %s;"
+            query = "SELECT c.*, p.* FROM COMPRA c INNER JOIN producto p ON c.producto_idproducto = p.idproducto"\
+                    " WHERE c.usuario_idusuario = %s;"
             variables = (idusuario,)
             buys = self.executeSQL(query, variables)
             return buys
@@ -585,7 +577,7 @@ class ConnectionDB:
     def get_sells_offers_in_client_peding_state(self):
         idusuario = 8
         if self.exists_shop_type_user_with_this_id(idusuario):
-            query = "SELECT p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
+            query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto" \
                     " WHERE o.usuario_idusuario = %s AND o.tipo = 'venta' AND o.estado = 'pendiente_cliente';"
             variables = (idusuario,)
             sells = self.executeSQL(query, variables)
@@ -601,7 +593,8 @@ class ConnectionDB:
     #HU: Obtener las ventas de un usuario
     def get_sells_by_userid(self, idusuario: int):
         if self.sell_with_user_id_exist(idusuario):
-            query = "SELECT * FROM venta WHERE usuario_idusuario = %s;"
+            query = "SELECT * FROM venta v INNER JOIN producto p ON v.producto_idproducto = p.idproducto"\
+                    " WHERE v.usuario_idusuario = %s;"
             variables = (idusuario,)
             sells = self.executeSQL(query, variables)
             return sells
@@ -618,14 +611,15 @@ class ConnectionDB:
             return False
 
     #CREATE SELL (falta probar)
-    def add_sell(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int, id_factura_compraventa: int):
+    def add_sell(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int,
+                 id_factura_compraventa: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha):
                     self.get_bill_buy_sell_by_id(id_factura_compraventa)
                     query = "INSERT INTO `mydb`.`VENTA` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`, `facturacompraventa_idFacturaCompra`) " \
                             "VALUES (%s,%s,%s,%s, %s);"
-                    variables = (precio, fecha, usuario_idusuario, producto_idproducto,id_factura_compraventa)
+                    variables = (precio, fecha, usuario_idusuario, producto_idproducto, id_factura_compraventa)
                     self.executeSQL(query, variables)
                     query_2 = "SELECT * FROM venta ORDER BY idventa DESC LIMIT 1;"
                     element = self.executeSQL(query_2)
@@ -638,14 +632,15 @@ class ConnectionDB:
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
 
-    def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int, id_factura_compraventa: int):
+    def add_buy(self, precio: int, fecha: str, usuario_idusuario: int, producto_idproducto: int,
+                id_factura_compraventa: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha):
                     self.get_bill_buy_sell_by_id(id_factura_compraventa)
                     query = "INSERT INTO `mydb`.`compra` (`precio`,`fecha`,`usuario_idusuario`,`producto_idproducto`, `facturacompraventa_idFacturaCompra`) " \
                             "VALUES (%s,%s,%s,%s, %s);"
-                    variables = (precio, fecha, usuario_idusuario, producto_idproducto,id_factura_compraventa)
+                    variables = (precio, fecha, usuario_idusuario, producto_idproducto, id_factura_compraventa)
                     self.executeSQL(query, variables)
                     query_2 = "SELECT * FROM compra ORDER BY idcompra DESC LIMIT 1;"
                     element = self.executeSQL(query_2)
@@ -657,6 +652,7 @@ class ConnectionDB:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product with this id was not found")
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this id was not found")
+
     #DELETE SELL (sin probar)
     def delete_sell(self, idventa: int):
         if not self.exists_idsell(idventa):
@@ -701,7 +697,7 @@ class ConnectionDB:
         else:
             return False
 
-    #HU: Obtener las ofertas de empeño desde el punto de vista de la tienda
+    #HU: Obtener las ofertas de empeño desde el punto de vista de la tienda (falta revisarlo)
     def get_pawn_offers_by_shop(self):
         idshop = 8
         if self.exists_offers_with_userid(idshop):
@@ -728,7 +724,8 @@ class ConnectionDB:
     # HU: Obtener mis empeños vigentes
     def get_currents_pawns_by_userid(self, idusuario: int):
         if self.exists_pawn_with_userid(idusuario):
-            query = "SELECT * FROM empennio WHERE usuario_idusuario = %s AND estado = 'en_curso';"
+            query = "SELECT e.*, p.* FROM empennio e INNER JOIN producto p ON e.producto_idproducto = p.idproducto"\
+                    " WHERE e.usuario_idusuario = %s AND e.estado = 'en_curso';"
             pawns = self.executeSQL(query, (idusuario,))
             if len(pawns) > 0:
                 return pawns
@@ -738,7 +735,6 @@ class ConnectionDB:
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
-
         query = "SELECT * FROM empennio WHERE  estado = 'en_curso';"
         pawns = self.executeSQL(query)
         if len(pawns) > 0:
@@ -763,7 +759,8 @@ class ConnectionDB:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pawn with this id was not found")
 
     #CREATE PAWN (falta probar)
-    def add_pawn(self, precio: int, fecha_inicio: str, fecha_final: str, usuario_idusuario: int, producto_idproducto: int, factura_empennio : int):
+    def add_pawn(self, precio: int, fecha_inicio: str, fecha_final: str, usuario_idusuario: int,
+                 producto_idproducto: int, factura_empennio: int):
         if self.exists_iduser(usuario_idusuario):
             if self.exists_idproduct(producto_idproducto):
                 if self.check_date(fecha_inicio) and self.check_date(fecha_final):
@@ -793,7 +790,8 @@ class ConnectionDB:
             query = "DELETE FROM `mydb`.`EMPENNIO` WHERE `idempennio` = %s;"
             variables = (idempennio,)
             self.executeSQL(query, variables)
-    def pay_pawn(self,id_pawn, id_pago_factura_empennio):
+
+    def pay_pawn(self, id_pawn, id_pago_factura_empennio):
         if not self.exists_idpawn(id_pawn):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Pawn with this id does not exist")
@@ -802,7 +800,8 @@ class ConnectionDB:
         variables = ("pagado", id_pago_factura_empennio, id_pawn)
         self.executeSQL(query, variables)
         return self.get_pawn_by_id(id_pawn)
-    def finish_offer(self,id_offer):
+
+    def finish_offer(self, id_offer):
         if not self.get_offer_by_id(id_offer):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offer with this id does not exist")
@@ -811,7 +810,8 @@ class ConnectionDB:
             variables = ("finalizada", id_offer)
             self.executeSQL(query, variables)
             return self.get_offer_by_id(id_offer)
-    def change_offer_state_to_in_shipping(self,id_offer):
+
+    def change_offer_state_to_in_shipping(self, id_offer):
         if not self.get_offer_by_id(id_offer):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Offer with this id does not exist")
@@ -828,10 +828,6 @@ class ConnectionDB:
             return oferta[0]
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer with this id was not found")
-
-
-
-
 
     #UPDATE PAWN (falta probar)
     def update_pawn(self, n_precio: int, n_estado: str, n_fecha_inicio: str, n_fecha_final: str, n_interes: str,
@@ -865,15 +861,16 @@ class ConnectionDB:
     def add_bill_buy_sell(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
                           departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
                           precio_IVA: int, info_adicional: str):
-            query = "INSERT INTO `mydb`.`facturacompraventa` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
-                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
-            variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
-                         precio_envio, precio_IVA, info_adicional)
-            self.executeSQL(query, variables)
-            query_2 = "SELECT * FROM facturacompraventa ORDER BY idFacturaCompra DESC LIMIT 1;"
-            element = self.executeSQL(query_2)
-            return element[0]
-    def get_bill_buy_sell_by_id(self,idBill : int):
+        query = "INSERT INTO `mydb`.`facturacompraventa` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+        variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                     precio_envio, precio_IVA, info_adicional)
+        self.executeSQL(query, variables)
+        query_2 = "SELECT * FROM facturacompraventa ORDER BY idFacturaCompra DESC LIMIT 1;"
+        element = self.executeSQL(query_2)
+        return element[0]
+
+    def get_bill_buy_sell_by_id(self, idBill: int):
         query = "SELECT * FROM facturacompraventa WHERE idFacturaCompra = %s;"
         variables = (idBill,)
         element = self.executeSQL(query, variables)
@@ -881,7 +878,7 @@ class ConnectionDB:
             return element[0]
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bill with this id was not found")
 
-    def get_bill_pawn_by_id(self,idBill: int):
+    def get_bill_pawn_by_id(self, idBill: int):
         query = "SELECT * FROM facturaempennio WHERE idFacturaEmpennio = %s;"
         variables = (idBill,)
         element = self.executeSQL(query, variables)
@@ -889,7 +886,7 @@ class ConnectionDB:
             return element[0]
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bill with this id was not found")
 
-    def get_bill_pay_pawn_by_id(self,idBill: int):
+    def get_bill_pay_pawn_by_id(self, idBill: int):
         query = "SELECT * FROM facturapagoempennio WHERE idFacturaEmpennio = %s;"
         variables = (idBill,)
         element = self.executeSQL(query, variables)
@@ -898,29 +895,28 @@ class ConnectionDB:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bill with this id was not found")
 
     def add_bill_pawn(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
-                          departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
-                          precio_IVA: int, info_adicional: str):
-            query = "INSERT INTO `mydb`.`facturaempennio` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
-                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
-            variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
-                         precio_envio, precio_IVA, info_adicional)
-            self.executeSQL(query, variables)
-            query_2 = "SELECT * FROM facturaempennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
-            element = self.executeSQL(query_2)
-            return element[0]
+                      departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
+                      precio_IVA: int, info_adicional: str):
+        query = "INSERT INTO `mydb`.`facturaempennio` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+        variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                     precio_envio, precio_IVA, info_adicional)
+        self.executeSQL(query, variables)
+        query_2 = "SELECT * FROM facturaempennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
+        element = self.executeSQL(query_2)
+        return element[0]
 
     def add_bill_pay_pawn(self, medio_pago: str, total: int, nombres: str, apellidos: str, direccion: str,
                           departamento: str, municipio: str, telefono: str, correo: str, precio_envio: int,
                           precio_IVA: int, info_adicional: str):
-            query = "INSERT INTO `mydb`.`facturapagoempennio` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
-                    " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
-            variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
-                         precio_envio, precio_IVA, info_adicional)
-            self.executeSQL(query, variables)
-            query_2 = "SELECT * FROM facturapagoempennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
-            element = self.executeSQL(query_2)
-            return element[0]
-
+        query = "INSERT INTO `mydb`.`facturapagoempennio` (`medio_pago`, `total`, `nombres`, `apellidos`, `direccion`," \
+                " `departamento`, `municipio`, `telefono`, `correo`, `precio_envio`, `precio_IVA`, `info_adicional` )VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+        variables = (medio_pago, total, nombres, apellidos, direccion, departamento, municipio, telefono, correo,
+                     precio_envio, precio_IVA, info_adicional)
+        self.executeSQL(query, variables)
+        query_2 = "SELECT * FROM facturapagoempennio ORDER BY idFacturaEmpennio DESC LIMIT 1;"
+        element = self.executeSQL(query_2)
+        return element[0]
 
     @staticmethod
     def check_date(date: str) -> bool:
