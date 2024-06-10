@@ -476,6 +476,15 @@ class ConnectionDB:
         else:
             return []
 
+    def get_sell_offers_by_shop_in_peding_state(self):
+        query = "SELECT o.*, p.* FROM oferta o INNER JOIN producto p ON o.producto_idproducto = p.idproducto"\
+                " WHERE (o.estado = 'pendiente_cliente' OR  o.estado = 'pendiente_tienda') AND o.tipo = 'venta' AND ofertante != 8;"
+        sales = self.executeSQL(query)
+        if len(sales) > 0:
+            return sales
+        else:
+            return []
+
     def get_all_pawn_on_the_way_offers(self):
         query = "SELECT o.*, p.* FROM OFERTA o INNER JOIN PRODUCTO p ON o.producto_idproducto = p.idproducto"\
                 " WHERE o.estado = 'en_curso' AND o.tipo = 'empennio';"
@@ -898,6 +907,20 @@ class ConnectionDB:
             variables = ("finalizada",id_acceptant, id_offer)
             self.executeSQL(query, variables)
             return self.get_offer_by_id(id_offer)
+
+    def shop_counteroffer(self ,id : int , precio : int):
+        offer = self.get_offer_by_id(id)
+        if offer["estado"] != "pendiente_tienda":
+            raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                                detail="Can only counteroffer  if its state is pendiente_tienda")
+        if not offer:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="Offer with this id does not exist")
+        else:
+            query = "UPDATE `mydb`.`OFERTA` SET  `precio` = %s , `estado` = %s WHERE `idoferta` = %s ;"
+            variables = (precio, "pendiente_cliente",id)
+            self.executeSQL(query, variables)
+            return self.get_offer_by_id(id)
 
     def update_offer_state(self, id_offer, state : str):
         if not self.get_offer_by_id(id_offer):

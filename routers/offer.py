@@ -70,6 +70,11 @@ async def get_all_pending_pawns():
     offers = dbConnect.get_pawns_offers_by_shop_in_peding_state()
     return JSONResponse(content=offers, status_code=status.HTTP_200_OK)
 
+@offerRouter.get("/getAllClientPendingSales")
+async def get_all_pending_sales():
+    offers = dbConnect.get_sell_offers_by_shop_in_peding_state()
+    return JSONResponse(content=offers, status_code=status.HTTP_200_OK)
+
 @offerRouter.get("/pending_pawn_offers_not_finalized_by_userid/{idusuario}", status_code=status.HTTP_200_OK)
 async def get_pending_offers_not_finalized_by_userid(idusuario: int):
     offers = dbConnect.get_all_pawn_peding_offers_without_finalized_by_userid(idusuario)
@@ -107,6 +112,11 @@ async def pawn_offers_not_finalized():
 
 
 
+
+@offerRouter.put("/shop_counteroffer")
+async def shop_counteroffer(id:int, precio:int):
+    offer = dbConnect.shop_counteroffer(id, precio)
+    return JSONResponse(content=offer, status_code=status.HTTP_200_OK)
 
 
 @offerRouter.put("/update_offer_state", status_code=status.HTTP_200_OK, response_model=Offer)
