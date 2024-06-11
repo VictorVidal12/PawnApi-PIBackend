@@ -829,7 +829,7 @@ class ConnectionDB:
 
     # HU: Obtener los empeños vigentes de la tienda
     def get_currents_pawns_by_shop(self):
-        query = "SELECT * FROM empennio WHERE  estado = 'en_curso';"
+        query = "SELECT e.* , p.*  FROM empennio e INNER JOIN producto p ON e.producto_idproducto = p.idproducto  WHERE  estado = 'en_curso';"
         pawns = self.executeSQL(query)
         if len(pawns) > 0:
             return pawns
