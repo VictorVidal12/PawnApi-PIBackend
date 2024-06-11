@@ -26,7 +26,7 @@ async def product_strings(id :int,nombre :str, descripcion :str, categoria :str)
     return JSONResponse(content=product_dict, status_code=status.HTTP_200_OK)
 
 @productRouter.put("/{id}", status_code= status.HTTP_200_OK, response_model = Product)
-async def img_product(id :str ,image: UploadFile):
+async def img_product(id :str ,image: UploadFile = File(...)):
     product = dbConnect.get_product_by_id(int(id))
     image_path = absolute_imagedir+product["imagen"]
     delete_image(image_path)
@@ -34,6 +34,14 @@ async def img_product(id :str ,image: UploadFile):
     dbConnect.update_product_image(int(id), img_dir)
     product = dbConnect.get_product_by_id(int(id))
     return JSONResponse(content=product, status_code=status.HTTP_200_OK)
+
+@productRouter.put("/image/{id}", status_code= status.HTTP_201_CREATED)
+async def add_image_to_product(id : int, image: UploadFile = File(...)):
+    img_dir = await upload_img(absolute_imagedir, image)
+    dbConnect.update_product_image(int(id), img_dir)
+    product = dbConnect.get_product_by_id(int(id))
+    return JSONResponse(content=product, status_code=status.HTTP_200_OK)
+
 
 
 def delete_image(image_path: str):
