@@ -30,7 +30,7 @@ Access the interactive API documentation provided by FastAPI at:
 
 ## 📞 Contact
 
-For any questions or suggestions, please contact us at [your-email@example.com](mailto:jevojob@gmail.com).
+For any questions or suggestions, please contact us at [jevojob@gmail.com](mailto:jevojob@gmail.com).
 
 ---
 
