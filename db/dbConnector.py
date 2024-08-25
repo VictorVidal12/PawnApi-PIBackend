@@ -6,9 +6,9 @@ from datetime import datetime
 class ConnectionDB:
 
     def __init__(self):
-        dbconfig = {'user': 'myadmin',
-                    'host': 'serverflexibletest.mysql.database.azure.com',
-                    'password': 'HolaMundo*',
+        dbconfig = {'user': 'root',
+                    'host': 'mydb.c54ieaqywog8.us-east-2.rds.amazonaws.com',
+                    'password': 'Victor-r2',
                     'database': 'mydb',
                     'port': 3306,  # Puerto predeterminado de MySQL
                     'raise_on_warnings': True}  # Para que se generen excepciones en caso de advertencias
