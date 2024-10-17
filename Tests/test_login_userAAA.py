@@ -1,79 +1,71 @@
+import unittest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from main import app
-from fastapi import status
-
-client = TestClient(app)
-
-# Datos de ejemplo para las pruebas
-valid_user = {
-    "correo_electronico": "test@example.com",
-    "contrasennia": "correct_password",
-    "nacimiento": "1990-01-01"
-}
-
-invalid_password_user = {
-    "correo_electronico": "test@example.com",
-    "contrasennia": "wrong_password",
-    "nacimiento": "1990-01-01"
-}
 
 
-# 1. Test para login exitoso
-@patch("db.dbConnector.ConnectionDB.get_user_by_email")
-@patch("tools.token.create_jwt_token")
-def test_login_success(mock_create_token, mock_get_user_by_email):
-    # Arrange: Configuramos los mocks
-    mock_get_user_by_email.return_value = valid_user
-    mock_create_token.return_value = "fake_jwt_token"
+class TestLoginUser(unittest.TestCase):
+    def setUp(self):
+        self.client = TestClient(app)
 
-    login_data = {
-        "email": "test@example.com",
-        "password": "correct_password"
-    }
+    @patch("routers.user.dbConnect.get_user_by_email")
+    @patch("routers.user.create_jwt_token")
+    def test_login_user_success(self, mock_create_jwt_token, mock_get_user_by_email):
+        # Arrange
+        email = "test@example.com"
+        password = "correct_password"
+        user_data = {
+            "correo_electronico": email,
+            "contrasennia": password,
+            "nacimiento": "1990-01-01"
+        }
+        mock_get_user_by_email.return_value = user_data
+        mock_create_jwt_token.return_value = "mocked_token"
 
-    # Act: Hacemos la petición POST a la ruta /login
-    response = client.post("/user/login", json=login_data)
+        # Act
+        response = self.client.post("/login", json={"email": email, "password": password})
 
-    # Assert: Verificamos el resultado
-    assert response.status_code == status.HTTP_200_OK
-    assert "token" in response.json()
-    assert response.json()["token"] == "fake_jwt_token"
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            "data": user_data,
+            "token": "mocked_token"
+        })
+
+    @patch("routers.user.dbConnect.get_user_by_email")
+    def test_login_user_incorrect_password(self, mock_get_user_by_email):
+        # Arrange
+        email = "test@example.com"
+        password = "incorrect_password"
+        user_data = {
+            "correo_electronico": email,
+            "contrasennia": "correct_password",
+            "nacimiento": "1990-01-01",
+        }
+        mock_get_user_by_email.return_value = user_data
+
+        # Act
+        response = self.client.post("/login", json={"email": email, "password": password})
+
+        # Assert
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.json(), {"detail": "Incorrect password"})
+
+    @patch("routers.user.dbConnect.get_user_by_email")
+    def test_login_user_not_found(self, mock_get_user_by_email):
+        # Arrange
+        email = "test@example.com"
+        password = "some_password"
+        mock_get_user_by_email.return_value = None  # Usuario no encontrado
+
+        # Act
+        response = self.client.post("/login", json={"email": email, "password": password})
+
+        # Assert
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "user does not found"})
 
 
-# 2. Test para login con contraseña incorrecta
-@patch("db.dbConnector.ConnectionDB.get_user_by_email")
-def test_login_incorrect_password(mock_get_user_by_email):
-    # Arrange
-    mock_get_user_by_email.return_value = invalid_password_user
+if __name__ == "__main__":
+    unittest.main()
 
-    login_data = {
-        "email": "test@example.com",
-        "password": "wrong_password"
-    }
-
-    # Act
-    response = client.post("/user/login", json=login_data)
-
-    # Assert
-    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
-    assert response.json()["detail"] == "Incorrect password"
-
-
-# 3. Test para login con usuario no encontrado
-@patch("db.dbConnector.ConnectionDB.get_user_by_email")
-def test_login_user_not_found(mock_get_user_by_email):
-    # Arrange
-    mock_get_user_by_email.return_value = None
-
-    login_data = {
-        "email": "non_existent_user@example.com",
-        "password": "any_password"
-    }
-
-    # Act
-    response = client.post("/user/login", json=login_data)
-
-    # Assert
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["detail"] == "user does not found"
