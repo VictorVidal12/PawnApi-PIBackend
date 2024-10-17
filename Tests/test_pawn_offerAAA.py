@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 from main import app
@@ -22,10 +23,8 @@ def test_update_offer_state_finalizada(monkeypatch):
 
 def test_update_offer_state_other_states(monkeypatch):
     # Arrange
-    id = 1
+    id = 8
     state = "en_curso"
-
-    # Simulamos la función update_offer_state
     mock_update_offer_state = AsyncMock(return_value={"id": id, "state": state})
     monkeypatch.setattr("routers.offer.dbConnect.update_offer_state", mock_update_offer_state)
 
