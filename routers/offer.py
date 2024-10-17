@@ -120,7 +120,7 @@ async def shop_counteroffer(id:int, precio:int):
 
 
 @offerRouter.put("/update_offer_state", status_code=status.HTTP_200_OK, response_model=Offer)
-async def update_offer_state(id:int, state:str, id_acceptant = None  ):
+async def update_offer_state(id:int, state:str, id_acceptant = None ):
     state = check_state(state)
     if state == "finalizada":
         offer = dbConnect.finish_offer(id, id_acceptant)
@@ -137,7 +137,7 @@ def check_category(categoria: str):
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
                             detail="You can only post an product with those categories (electrónica ,moda, hogar,salud,entretenimiento,deportes, transporte, mascotas,arte, literatura)")
 def check_state(estado : str):
-    estados = ["pendiente_cliente","pendiente_tienda","rechazada","en_curso", "finalizada"]
+    estados = ["pendiente_cliente", "pendiente_tienda", "rechazada", "en_curso", "finalizada"]
     if estado.lower() in estados:
         return estado.lower()
     else:
