@@ -1,21 +1,25 @@
-import pytest
-from unittest.mock import AsyncMock
+import unittest
+from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
 from main import app
-from routers.pawn import dbConnect
-
-client = TestClient(app)
 
 
-def test_get_all_active_pawns(monkeypatch):
-    # Arrange
-    mock_get_users = AsyncMock(return_value=[{"idusuario": 1, "nombre": "Reloj", "tipo": "vigente"}])
-    monkeypatch.setattr("routers.pawn.dbConnect.get_users", mock_get_users)
+class TestGetAllActivePawns(unittest.TestCase):
+    def setUp(self):
+        self.client = TestClient(app)
 
-    # Act
-    response = client.get("/pawns")  # Ajusta la ruta según tu aplicación
+    @patch("routers.pawn.dbConnect.get_users", new_callable=AsyncMock)
+    def test_get_all_active_pawns(self, mock_get_users):
+        # Arrange
+        mock_get_users.return_value = [{"idusuario": 1, "nombre": "Reloj", "tipo": "vigente"}]
+        # Act
+        response = self.client.get("/pawns")
 
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == [{"idusuario": 1, "nombre": "Reloj", "tipo": "vigente"}]
-    mock_get_users.assert_called_once()
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [{"idusuario": 1, "nombre": "Reloj", "tipo": "vigente"}])
+        mock_get_users.assert_called_once()
+
+
+if __name__ == "__main__":
+    unittest.main()
